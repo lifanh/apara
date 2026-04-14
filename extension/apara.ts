@@ -4,6 +4,8 @@ import { readFileSync, existsSync } from "fs";
 import { join, basename } from "path";
 import { initRepo, validateRepo, loadConfig } from "./src/repo.js";
 import { appendToLog } from "./src/ingest.js";
+import { moveSource } from "./src/lifecycle.js";
+import { recalculateAllHeat } from "./src/heat.js";
 
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("apara-init", {
@@ -58,6 +60,41 @@ export default function (pi: ExtensionAPI) {
             text: `Source file read successfully: ${params.source_path}\n\nContent:\n\n${content}\n\nPlease:\n1. Create a summary page at wiki/summaries/${basename(params.source_path)}\n2. Update or create relevant entity/concept pages\n3. Update wiki/index.md with new pages\n4. Commit with message "ingest: ${params.source_path}"`,
           },
         ],
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: "apara_lifecycle",
+    label: "PARA Lifecycle",
+    description:
+      "Move a source between PARA categories (projects, areas, resources, archives). Recalculates heat on affected wiki pages.",
+    parameters: Type.Object({
+      source_path: Type.String({ description: "Current path relative to raw/, e.g. projects/learn-rust" }),
+      target_category: Type.Union([
+        Type.Literal("projects"),
+        Type.Literal("areas"),
+        Type.Literal("resources"),
+        Type.Literal("archives"),
+      ]),
+    }),
+    async execute(_toolCallId, params) {
+      const cwd = process.cwd();
+      const config = loadConfig(cwd);
+      const rawDir = join(cwd, config.raw_dir);
+      const wikiDir = join(cwd, config.wiki_dir);
+
+      const { oldPath, newPath } = moveSource(rawDir, params.source_path, params.target_category as any);
+      const heatChanges = recalculateAllHeat(wikiDir);
+      appendToLog(wikiDir, "lifecycle", `${oldPath} → ${newPath}`);
+
+      let summary = `Moved ${oldPath} → ${newPath}`;
+      if (heatChanges.length > 0) {
+        summary += `\n\nHeat changes:\n${heatChanges.map((c) => `  ${c.path}: ${c.oldHeat} → ${c.newHeat}`).join("\n")}`;
+      }
+
+      return {
+        content: [{ type: "text" as const, text: summary }],
       };
     },
   });
