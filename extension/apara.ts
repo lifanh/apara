@@ -3,7 +3,7 @@ import { Type } from "@sinclair/typebox";
 import { readFileSync, existsSync } from "fs";
 import { join, basename } from "path";
 import { initRepo, validateRepo, loadConfig } from "./src/repo.js";
-import { appendToLog } from "./src/ingest.js";
+import { appendToLog, getUningestedSources } from "./src/ingest.js";
 import { moveSource } from "./src/lifecycle.js";
 import { recalculateAllHeat } from "./src/heat.js";
 
@@ -95,6 +95,71 @@ export default function (pi: ExtensionAPI) {
 
       return {
         content: [{ type: "text" as const, text: summary }],
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: "apara_lint",
+    label: "Wiki Lint",
+    description:
+      "Health-check the APARA wiki. Finds: uningested sources, orphan pages, missing cross-references, and stale pages.",
+    parameters: Type.Object({}),
+    async execute() {
+      const cwd = process.cwd();
+      const config = loadConfig(cwd);
+      const rawDir = join(cwd, config.raw_dir);
+      const wikiDir = join(cwd, config.wiki_dir);
+
+      const uningested = getUningestedSources(rawDir, wikiDir);
+      const errors = validateRepo(cwd);
+
+      let report = "## Wiki Health Report\n\n";
+
+      if (errors.length > 0) {
+        report += `### Structural Issues\n${errors.map((e) => `- ❌ ${e}`).join("\n")}\n\n`;
+      }
+
+      if (uningested.length > 0) {
+        report += `### Uningested Sources (${uningested.length})\n${uningested.map((s) => `- 📄 ${s}`).join("\n")}\n\n`;
+      }
+
+      report += "Please also check for:\n- Contradictions between pages\n- Orphan pages with no inbound links\n- Concepts mentioned but lacking their own page\n- Broken [[wiki-links]]";
+
+      appendToLog(wikiDir, "lint", `${errors.length} structural issues, ${uningested.length} uningested`);
+
+      return {
+        content: [{ type: "text" as const, text: report }],
+      };
+    },
+  });
+
+  pi.registerTool({
+    name: "apara_query",
+    label: "Wiki Query",
+    description:
+      "Query the APARA wiki. Reads the wiki index to find relevant pages, then reads those pages to answer the question. Prioritizes hot pages over cold ones.",
+    parameters: Type.Object({
+      question: Type.String({ description: "The question to answer" }),
+    }),
+    async execute(_toolCallId, params) {
+      const cwd = process.cwd();
+      const config = loadConfig(cwd);
+      const wikiDir = join(cwd, config.wiki_dir);
+      const indexPath = join(wikiDir, "index.md");
+
+      let indexContent = "";
+      if (existsSync(indexPath)) {
+        indexContent = readFileSync(indexPath, "utf-8");
+      }
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Question: ${params.question}\n\nWiki Index:\n\n${indexContent}\n\nPlease:\n1. Identify relevant wiki pages from the index\n2. Read those pages (prioritize hot pages)\n3. Synthesize an answer with citations\n4. If the answer is valuable, offer to save it as a wiki/synthesis/ page`,
+          },
+        ],
       };
     },
   });
