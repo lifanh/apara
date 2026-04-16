@@ -34,12 +34,9 @@ describe("repo", () => {
   });
 
   describe("initRepo", () => {
-    it("creates PARA and wiki directory structure", () => {
+    it("creates raw and wiki directory structure", () => {
       initRepo(tempDir);
-      expect(existsSync(join(tempDir, "raw/projects"))).toBe(true);
-      expect(existsSync(join(tempDir, "raw/areas"))).toBe(true);
-      expect(existsSync(join(tempDir, "raw/resources"))).toBe(true);
-      expect(existsSync(join(tempDir, "raw/archives"))).toBe(true);
+      expect(existsSync(join(tempDir, "raw"))).toBe(true);
       expect(existsSync(join(tempDir, "wiki/entities"))).toBe(true);
       expect(existsSync(join(tempDir, "wiki/concepts"))).toBe(true);
       expect(existsSync(join(tempDir, "wiki/summaries"))).toBe(true);

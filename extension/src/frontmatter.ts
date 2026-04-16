@@ -1,13 +1,11 @@
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 
 export type PageType = "entity" | "concept" | "summary" | "synthesis";
-export type Heat = "hot" | "cold";
 
 export interface WikiPage {
   title: string;
   type: PageType;
-  para_sources: string[];
-  heat: Heat;
+  sources: string[];
   created: string;
   updated: string;
   links: string[];
@@ -23,8 +21,7 @@ export function parseFrontmatter(content: string): WikiPage {
   return {
     title: meta.title ?? "",
     type: meta.type ?? "entity",
-    para_sources: meta.para_sources ?? [],
-    heat: meta.heat ?? "hot",
+    sources: meta.sources ?? [],
     created: meta.created ?? "",
     updated: meta.updated ?? "",
     links: meta.links ?? [],
@@ -36,8 +33,7 @@ export function serializePage(page: WikiPage): string {
   const frontmatter: Record<string, unknown> = {
     title: page.title,
     type: page.type,
-    para_sources: page.para_sources,
-    heat: page.heat,
+    sources: page.sources,
     created: page.created,
     updated: page.updated,
     links: page.links,

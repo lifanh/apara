@@ -5,9 +5,8 @@ describe("frontmatter", () => {
   const samplePage = `---
 title: "Ownership and Borrowing"
 type: concept
-para_sources:
-  - projects/learn-rust/rust-book-ch1.md
-heat: hot
+sources:
+  - rust/rust-book-ch1.md
 created: 2026-04-10
 updated: 2026-04-12
 links:
@@ -21,8 +20,7 @@ Rust uses ownership and borrowing to manage memory.`;
       const page = parseFrontmatter(samplePage);
       expect(page.title).toBe("Ownership and Borrowing");
       expect(page.type).toBe("concept");
-      expect(page.para_sources).toEqual(["projects/learn-rust/rust-book-ch1.md"]);
-      expect(page.heat).toBe("hot");
+      expect(page.sources).toEqual(["rust/rust-book-ch1.md"]);
       expect(page.links).toEqual(["entities/rust.md"]);
       expect(page.body).toContain("Rust uses ownership");
     });
@@ -33,8 +31,7 @@ Rust uses ownership and borrowing to manage memory.`;
       const page: WikiPage = {
         title: "Test Page",
         type: "entity",
-        para_sources: ["areas/health/sleep.md"],
-        heat: "hot",
+        sources: ["health/sleep.md"],
         created: "2026-04-10",
         updated: "2026-04-12",
         links: [],

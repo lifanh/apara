@@ -1,16 +1,15 @@
 # APARA Design Spec
 
-> A PARA-integrated LLM Wiki system — an incremental life/knowledge tracking second brain.
+> An LLM Wiki second brain — an incremental life/knowledge tracking system.
 
 ## Overview
 
-APARA merges the PARA method (Projects/Areas/Resources/Archives) with the LLM Wiki pattern to create a unified system for both life management and knowledge synthesis. Raw sources are organized by actionability (PARA); a unified wiki knowledge graph synthesizes across all sources regardless of origin. An LLM agent (Pi Agent) does all the maintenance — summarizing, cross-referencing, filing, and bookkeeping.
+APARA uses the LLM Wiki pattern to create a unified system for knowledge synthesis. Raw sources are collected in a simple directory structure; a unified wiki knowledge graph synthesizes across all sources. An LLM agent (Pi Agent) does all the maintenance — summarizing, cross-referencing, filing, and bookkeeping.
 
 ## Requirements
 
-- **Unified purpose**: both a life dashboard (active projects, ongoing areas) and a knowledge garden (deep synthesis, cross-referencing)
-- **Hybrid layers**: PARA governs source organization; the wiki is a single unified knowledge graph
-- **Hot/cold memory**: wiki pages linked to active Projects/Areas are "hot" (prioritized in queries); pages only linked to archived sources are "cold" (still reachable)
+- **Unified purpose**: a knowledge garden with deep synthesis and cross-referencing
+- **Simple source organization**: raw sources live in a flat or topic-based directory structure — organized however the user wants
 - **Text-focused inputs**: primarily markdown, notes, articles, book highlights, meeting notes
 - **Dedicated web app**: TS web app communicating with Pi Agent via RPC (JSON protocol over stdin/stdout)
 - **Git-backed**: all data (sources + wiki) lives in a configurable git repository; git is the sync and version control mechanism
@@ -38,10 +37,10 @@ Three layers: Git Repo (data) → Pi Agent (engine) → Web App (UI).
 │                                                         │
 │  ┌─────────────────────────────────────────────────────┐│
 │  │  APARA Extension                                    ││
-│  │  ┌─────────┐ ┌─────────┐ ┌──────┐ ┌────────────┐  ││
-│  │  │ Ingest  │ │  Query  │ │ Lint │ │  Lifecycle │  ││
-│  │  │  Tool   │ │  Tool   │ │ Tool │ │    Tool    │  ││
-│  │  └─────────┘ └─────────┘ └──────┘ └────────────┘  ││
+│  │  ┌─────────┐ ┌─────────┐ ┌──────┐                  ││
+│  │  │ Ingest  │ │  Query  │ │ Lint │                  ││
+│  │  │  Tool   │ │  Tool   │ │ Tool │                  ││
+│  │  └─────────┘ └─────────┘ └──────┘                  ││
 │  └─────────────────────────────────────────────────────┘│
 │  Schema (AGENTS.md) — wiki conventions, page formats    │
 └──────────────────────┬──────────────────────────────────┘
@@ -50,14 +49,14 @@ Three layers: Git Repo (data) → Pi Agent (engine) → Web App (UI).
 │                Git Repository (Data)                     │
 │                                                         │
 │  raw/                        wiki/                      │
-│  ├── projects/               ├── index.md               │
-│  │   └── home-reno/          ├── log.md                 │
-│  ├── areas/                  ├── entities/              │
-│  │   └── health/             ├── concepts/              │
-│  ├── resources/              ├── summaries/             │
-│  │   └── cooking/            └── synthesis/             │
-│  └── archives/                                          │
-│      └── old-job/            .apara.yaml (config)       │
+│  ├── rust/                   ├── index.md               │
+│  │   ├── rust-book-ch1.md    ├── log.md                 │
+│  │   └── rust-blog-post.md   ├── entities/              │
+│  ├── health/                 ├── concepts/              │
+│  │   └── sleep-article.md    ├── summaries/             │
+│  └── cooking/                └── synthesis/             │
+│      └── sourdough-guide.md                             │
+│                              .apara.yaml (config)       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -65,24 +64,19 @@ Three layers: Git Repo (data) → Pi Agent (engine) → Web App (UI).
 
 ```
 my-brain/                         # the git repo
-├── .apara.yaml                   # app config (repo path, LLM model, preferences)
+├── .apara.yaml                   # app config (repo name, LLM model, preferences)
 ├── AGENTS.md                     # Pi Agent schema — wiki conventions, page formats
 │
-├── raw/                          # PARA-organized sources (immutable)
-│   ├── projects/
-│   │   └── learn-rust/
-│   │       ├── rust-book-ch1.md
-│   │       └── rust-blog-post.md
-│   ├── areas/
-│   │   └── health/
-│   │       ├── sleep-article.md
-│   │       └── exercise-notes.md
-│   ├── resources/
-│   │   └── cooking/
-│   │       └── sourdough-guide.md
-│   └── archives/
-│       └── old-project/
-│           └── ...
+├── raw/                          # source documents (immutable, user-organized)
+│   ├── rust/
+│   │   ├── rust-book-ch1.md
+│   │   └── rust-blog-post.md
+│   ├── health/
+│   │   ├── sleep-article.md
+│   │   └── exercise-notes.md
+│   ├── cooking/
+│   │   └── sourdough-guide.md
+│   └── trip-planning-notes.md    # flat files are fine too
 │
 ├── wiki/                         # unified knowledge graph (LLM-maintained)
 │   ├── index.md                  # catalog of all pages with summaries
@@ -97,16 +91,15 @@ my-brain/                         # the git repo
 
 ### Wiki Page Frontmatter
 
-Every wiki page has YAML frontmatter that powers the hot/cold layer and the dashboard:
+Every wiki page has YAML frontmatter:
 
 ```yaml
 ---
 title: "Ownership and Borrowing"
 type: concept                     # entity | concept | summary | synthesis
-para_sources:                     # which PARA sources feed this page
-  - projects/learn-rust/rust-book-ch1.md
-  - projects/learn-rust/rust-blog-post.md
-heat: hot                         # hot | cold (derived, not manually set)
+sources:                          # which raw sources feed this page
+  - rust/rust-book-ch1.md
+  - rust/rust-blog-post.md
 created: 2026-04-10
 updated: 2026-04-12
 links:                            # explicit cross-references
@@ -114,8 +107,6 @@ links:                            # explicit cross-references
   - concepts/memory-safety.md
 ---
 ```
-
-The `heat` field is derived — the Lifecycle tool recalculates it whenever a source moves between PARA categories. If all `para_sources` point to `archives/`, the page goes cold.
 
 ### .apara.yaml (Config)
 
@@ -131,31 +122,24 @@ remote: "origin"                  # git remote for sync (optional)
 
 ## Engine Layer: Pi Agent APARA Extension
 
-A Pi Agent extension providing four core tools.
+A Pi Agent extension providing three core tools.
 
 ### Ingest Tool
 
 - **Input**: source file path(s) in `raw/`
-- **Flow**: read source → discuss key takeaways with user via chat → create summary page in `wiki/summaries/` → update or create relevant entity/concept pages → update `wiki/index.md` → append to `wiki/log.md` → recalculate `heat` on affected pages → git commit
+- **Flow**: read source → discuss key takeaways with user via chat → create summary page in `wiki/summaries/` → update or create relevant entity/concept pages → update `wiki/index.md` → append to `wiki/log.md` → git commit
 - A single ingest may touch 10-15 wiki pages
 
 ### Query Tool
 
 - **Input**: natural language question
 - **Flow**: read `wiki/index.md` to find relevant pages → read those pages → synthesize answer with citations → optionally save as a `wiki/synthesis/` page if user says "keep this"
-- Queries against hot pages are prioritized; cold pages are still reachable
 
 ### Lint Tool
 
-- **Input**: none (entire wiki) or a scope (e.g., a specific PARA category)
+- **Input**: none (entire wiki) or a scope
 - **Checks**: contradictions between pages, stale claims, orphan pages (no inbound links), missing pages (concepts mentioned but no page exists), broken cross-references, uningested sources in `raw/`
 - **Output**: report with suggested fixes; user approves fixes to apply
-
-### Lifecycle Tool
-
-- **Input**: source path + target PARA category
-- **Flow**: move source directory in `raw/` → recalculate `heat` on all wiki pages referencing those sources → update `wiki/index.md` metadata → log the transition → git commit
-- Supports bulk transitions (e.g., "archive all completed projects")
 
 ### AGENTS.md (Schema)
 
@@ -164,7 +148,6 @@ Lives in the repo root. Tells Pi Agent:
 - Wiki page format conventions (frontmatter schema, markdown style)
 - Naming conventions for files and directories
 - Cross-referencing rules (when to create a link vs. a new page)
-- What constitutes a "hot" vs "cold" page
 - How to handle contradictions between sources
 - Ingest workflow steps
 
@@ -179,7 +162,7 @@ The app uses a two-panel layout:
 - **Left panel**: tabbed content area switching between Dashboard, Wiki Browser, Source Manager, and Timeline
 - **Right panel**: persistent Pi Agent chat — always visible, never hidden
 
-The chat is the primary interaction surface. All LLM operations (ingest, query, lint, lifecycle) happen through conversation. The left panel provides rich browsing and visualization context alongside the chat.
+The chat is the primary interaction surface. All LLM operations (ingest, query, lint) happen through conversation. The left panel provides rich browsing and visualization context alongside the chat.
 
 ### Views
 
@@ -187,10 +170,10 @@ The chat is the primary interaction surface. All LLM operations (ingest, query, 
 
 Four widgets:
 
-- **Active Projects** — cards for each active project with source count, wiki page count, last activity. Click to drill into the project's wiki pages.
+- **Recent Sources** — recently added source files with ingestion status. Click a source to start an ingest conversation.
 - **Pending Inbox** — sources in `raw/` not yet ingested. Your processing queue. Click a source to start an ingest conversation in the chat panel.
-- **Hot Pages** 🔥 — most-connected or recently-updated wiki pages. The pulse of the knowledge base.
-- **Recent Activity** — compact feed of last N actions (ingests, saved queries, lint fixes, PARA transitions).
+- **Active Pages** — most-connected or recently-updated wiki pages. The pulse of the knowledge base.
+- **Recent Activity** — compact feed of last N actions (ingests, saved queries, lint fixes).
 
 #### Chat / Query Interface
 
@@ -199,7 +182,6 @@ Conversational interface powered by Pi Agent via RPC. Supports:
 - Natural language queries against the wiki
 - Ingest commands ("ingest the new rust article")
 - Lint requests ("check the wiki health")
-- Lifecycle operations ("archive the learn-rust project")
 - Saving query responses back to the wiki ("keep this")
 
 The chat shows structured responses — the LLM reports which pages it created/updated, with clickable links that open in the Wiki Browser panel.
@@ -209,25 +191,25 @@ The chat shows structured responses — the LLM reports which pages it created/u
 Rendered markdown viewer for wiki pages. Features:
 
 - Follow `[[wiki-links]]` between pages
-- Page metadata sidebar: type, heat status, source list, linked pages, created/updated dates
+- Page metadata sidebar: type, source list, linked pages, created/updated dates
 - Breadcrumb navigation
 - Search across wiki pages
 
 #### Source Manager
 
-Browse and manage raw sources organized by PARA. Features:
+Browse and manage raw sources. Features:
 
-- Tree view of `raw/` organized by projects/areas/resources/archives
-- Drag-and-drop to add new sources
-- Move items between PARA categories (triggers Lifecycle tool)
-- Visual indicator for ingested vs. pending sources
+- Tree view of `raw/` showing the directory structure
+- Each file shows: name, ingestion status (✅ ingested / ⬜ pending)
+- Click a pending source → pre-fills chat with "ingest [path]"
+- Drag-and-drop file upload into any directory
 - Click a source to view its content or start an ingest
 
 #### Timeline / Activity Log
 
 Chronological view of all wiki activity. Features:
 
-- Filterable by action type (ingest, query, lint, lifecycle)
+- Filterable by action type (ingest, query, lint)
 - Searchable
 - Each entry links to the relevant wiki pages or sources
 - Mirrors `wiki/log.md` but with richer UI
@@ -238,7 +220,6 @@ The chat and panels are connected:
 
 - Clicking a pending source in Dashboard → pre-fills chat with "ingest [source]"
 - Chat mentions a wiki page → clickable link opens it in Wiki Browser
-- Moving a source in Source Manager → triggers Lifecycle tool via chat
 - Saving a query response → creates a new page visible in Wiki Browser
 
 ## Tech Decisions

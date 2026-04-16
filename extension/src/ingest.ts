@@ -27,7 +27,7 @@ export function isIngested(wikiDir: string, sourcePath: string): boolean {
     const content = readFileSync(join(summariesDir, file), "utf-8");
     try {
       const page = parseFrontmatter(content);
-      if (page.para_sources.includes(sourcePath)) return true;
+      if (page.sources.includes(sourcePath)) return true;
     } catch {
       continue;
     }

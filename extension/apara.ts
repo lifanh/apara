@@ -4,8 +4,6 @@ import { readFileSync, existsSync } from "fs";
 import { join, basename } from "path";
 import { initRepo, validateRepo, loadConfig } from "./src/repo.js";
 import { appendToLog, getUningestedSources } from "./src/ingest.js";
-import { moveSource } from "./src/lifecycle.js";
-import { recalculateAllHeat } from "./src/heat.js";
 
 export default function (pi: ExtensionAPI) {
   pi.registerCommand("apara-init", {
@@ -37,7 +35,7 @@ export default function (pi: ExtensionAPI) {
     description:
       "Ingest a raw source file into the APARA wiki. Reads the source, creates a summary page, and updates the index and log. The LLM should then update or create relevant entity/concept pages based on the source content.",
     parameters: Type.Object({
-      source_path: Type.String({ description: "Path to the source file relative to raw/, e.g. projects/learn-rust/ch1.md" }),
+      source_path: Type.String({ description: "Path to the source file relative to raw/, e.g. rust/ch1.md" }),
     }),
     async execute(_toolCallId, params) {
       const cwd = process.cwd();
@@ -60,41 +58,6 @@ export default function (pi: ExtensionAPI) {
             text: `Source file read successfully: ${params.source_path}\n\nContent:\n\n${content}\n\nPlease:\n1. Create a summary page at wiki/summaries/${basename(params.source_path)}\n2. Update or create relevant entity/concept pages\n3. Update wiki/index.md with new pages\n4. Commit with message "ingest: ${params.source_path}"`,
           },
         ],
-      };
-    },
-  });
-
-  pi.registerTool({
-    name: "apara_lifecycle",
-    label: "PARA Lifecycle",
-    description:
-      "Move a source between PARA categories (projects, areas, resources, archives). Recalculates heat on affected wiki pages.",
-    parameters: Type.Object({
-      source_path: Type.String({ description: "Current path relative to raw/, e.g. projects/learn-rust" }),
-      target_category: Type.Union([
-        Type.Literal("projects"),
-        Type.Literal("areas"),
-        Type.Literal("resources"),
-        Type.Literal("archives"),
-      ]),
-    }),
-    async execute(_toolCallId, params) {
-      const cwd = process.cwd();
-      const config = loadConfig(cwd);
-      const rawDir = join(cwd, config.raw_dir);
-      const wikiDir = join(cwd, config.wiki_dir);
-
-      const { oldPath, newPath } = moveSource(rawDir, params.source_path, params.target_category as any);
-      const heatChanges = recalculateAllHeat(wikiDir);
-      appendToLog(wikiDir, "lifecycle", `${oldPath} → ${newPath}`);
-
-      let summary = `Moved ${oldPath} → ${newPath}`;
-      if (heatChanges.length > 0) {
-        summary += `\n\nHeat changes:\n${heatChanges.map((c) => `  ${c.path}: ${c.oldHeat} → ${c.newHeat}`).join("\n")}`;
-      }
-
-      return {
-        content: [{ type: "text" as const, text: summary }],
       };
     },
   });
@@ -138,7 +101,7 @@ export default function (pi: ExtensionAPI) {
     name: "apara_query",
     label: "Wiki Query",
     description:
-      "Query the APARA wiki. Reads the wiki index to find relevant pages, then reads those pages to answer the question. Prioritizes hot pages over cold ones.",
+      "Query the APARA wiki. Reads the wiki index to find relevant pages, then reads those pages to answer the question.",
     parameters: Type.Object({
       question: Type.String({ description: "The question to answer" }),
     }),
@@ -157,7 +120,7 @@ export default function (pi: ExtensionAPI) {
         content: [
           {
             type: "text" as const,
-            text: `Question: ${params.question}\n\nWiki Index:\n\n${indexContent}\n\nPlease:\n1. Identify relevant wiki pages from the index\n2. Read those pages (prioritize hot pages)\n3. Synthesize an answer with citations\n4. If the answer is valuable, offer to save it as a wiki/synthesis/ page`,
+            text: `Question: ${params.question}\n\nWiki Index:\n\n${indexContent}\n\nPlease:\n1. Identify relevant wiki pages from the index\n2. Read those pages\n3. Synthesize an answer with citations\n4. If the answer is valuable, offer to save it as a wiki/synthesis/ page`,
           },
         ],
       };

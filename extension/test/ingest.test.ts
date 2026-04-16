@@ -43,9 +43,9 @@ describe("ingest helpers", () => {
       mkdirSync(join(tempDir, "wiki/summaries"), { recursive: true });
       writeFileSync(
         join(tempDir, "wiki/summaries/ch1.md"),
-        '---\ntitle: "Ch1 Summary"\ntype: summary\npara_sources:\n  - projects/learn-rust/ch1.md\nheat: hot\ncreated: 2026-04-10\nupdated: 2026-04-10\nlinks: []\n---\n\nSummary content.\n'
+        '---\ntitle: "Ch1 Summary"\ntype: summary\nsources:\n  - rust/ch1.md\ncreated: 2026-04-10\nupdated: 2026-04-10\nlinks: []\n---\n\nSummary content.\n'
       );
-      expect(isIngested(join(tempDir, "wiki"), "projects/learn-rust/ch1.md")).toBe(true);
+      expect(isIngested(join(tempDir, "wiki"), "rust/ch1.md")).toBe(true);
     });
   });
 });

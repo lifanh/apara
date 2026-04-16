@@ -34,10 +34,7 @@ export function initRepo(repoRoot: string): void {
   const wikiDir = join(repoRoot, config.wiki_dir);
 
   const dirs = [
-    join(rawDir, "projects"),
-    join(rawDir, "areas"),
-    join(rawDir, "resources"),
-    join(rawDir, "archives"),
+    rawDir,
     join(wikiDir, "entities"),
     join(wikiDir, "concepts"),
     join(wikiDir, "summaries"),

@@ -2,15 +2,41 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build APARA — a PARA-integrated LLM Wiki second brain with a Pi Agent extension (engine) and a TS web app (UI) connected via RPC.
+**Goal:** Build APARA — an LLM Wiki second brain with a Pi Agent extension (engine) and a TS web app (UI) connected via RPC.
 
-**Architecture:** Pi Agent runs as a subprocess (`pi --mode rpc`) spawned by the web app's server. A custom APARA extension registers four tools (ingest, query, lint, lifecycle) that operate on a git-backed knowledge repo. The web app provides a chat-centric UI with dashboard, wiki browser, source manager, and timeline views.
+**Architecture:** Pi Agent runs as a subprocess (`pi --mode rpc`) spawned by the web app's server. A custom APARA extension registers three tools (ingest, query, lint) that operate on a git-backed knowledge repo. The web app provides a chat-centric UI with dashboard, wiki browser, source manager, and timeline views.
 
 **Tech Stack:** TypeScript throughout. Pi Agent extension (`@sinclair/typebox` for schemas). Web framework TBD (Astro, Next.js, or SvelteKit). Git repo as data layer. Pi Agent RPC (JSON Lines over stdin/stdout).
 
+## Progress
+
+| Phase | Task | Status | Commit |
+|-------|------|--------|--------|
+| 1 | Task 1: Initialize Project & Git Repo Structure | ✅ Done | `0ac788b` |
+| 1 | Task 2: Wiki Frontmatter Parser & Page Utilities | ✅ Done | `25a327f` |
+| 1 | Task 3: Heat Calculation Module | 🗑️ Removed (PARA pivot) | `1b50e91` |
+| 1 | Task 4: Git Operations Module | ✅ Done | `6756f7f` |
+| 1 | Task 5: Pi Agent Extension Skeleton | ✅ Done | `4b4a8c9` |
+| 1 | Task 6: Ingest Tool | ✅ Done | `4b4a8c9` |
+| 1 | Task 7: Lifecycle Tool | 🗑️ Removed (PARA pivot) | `c1e5af3` |
+| 1 | Task 8: Lint and Query Tools | ✅ Done | `89b1880` |
+| 1 | Task 8.5: PARA Removal Refactor | ⬜ Pending | — |
+| 2 | Task 9: Pi Agent RPC Client | ⬜ Pending | — |
+| 3 | Task 10: Web App Scaffold | ⬜ Pending | — |
+| 3 | Task 11: Chat Panel — Pi Agent Integration | ⬜ Pending | — |
+| 3 | Task 12: Dashboard View | ⬜ Pending | — |
+| 3 | Task 13: Wiki Browser View | ⬜ Pending | — |
+| 3 | Task 14: Source Manager View | ⬜ Pending | — |
+| 3 | Task 15: Timeline View | ⬜ Pending | — |
+| 4 | Task 16: Chat ↔ Panel Wiring | ⬜ Pending | — |
+| 4 | Task 17: Git Sync UI | ⬜ Pending | — |
+| 4 | Task 18: AGENTS.md Schema File | ⬜ Pending | — |
+
+**Current state:** Phase 1 partially complete. Pivoting from PARA-integrated design to plain LLM Wiki. Tasks 3 (heat) and 7 (lifecycle) are removed. Next: Task 8.5 (PARA removal refactor) then 3 tools (ingest, query, lint).
+
 ---
 
-## Phase 1: Data Layer & Pi Agent Extension
+## Phase 1: Data Layer & Pi Agent Extension ✅
 
 The foundation — get the knowledge engine working in Pi Agent's terminal before building any UI.
 
@@ -1145,6 +1171,86 @@ git commit -m "feat: lint and query tools"
 
 ---
 
+### Task 8.5: PARA Removal Refactor
+
+Remove all PARA-specific code (heat, lifecycle, PARA categories) and simplify to the plain LLM Wiki pattern.
+
+**Files:**
+- Delete: `extension/src/lifecycle.ts`, `extension/test/lifecycle.test.ts`
+- Delete: `extension/src/heat.ts`, `extension/test/heat.test.ts`
+- Modify: `extension/src/frontmatter.ts` — remove `Heat` type, `heat` field; rename `para_sources` → `sources`
+- Modify: `extension/test/frontmatter.test.ts` — update to match simplified frontmatter
+- Modify: `extension/src/repo.ts` — `initRepo()` creates `raw/` (no PARA subdirs)
+- Modify: `extension/test/repo.test.ts` — remove PARA subdir assertions
+- Modify: `extension/apara.ts` — remove lifecycle tool, remove heat/lifecycle imports
+
+- [ ] **Step 1: Delete PARA-only modules**
+
+```bash
+rm extension/src/lifecycle.ts extension/test/lifecycle.test.ts
+rm extension/src/heat.ts extension/test/heat.test.ts
+```
+
+- [ ] **Step 2: Simplify frontmatter.ts**
+
+Remove `Heat` type and `heat` field from `WikiPage`. Rename `para_sources` to `sources`.
+
+```typescript
+export type PageType = "entity" | "concept" | "summary" | "synthesis";
+
+export interface WikiPage {
+  title: string;
+  type: PageType;
+  sources: string[];       // was para_sources
+  created: string;
+  updated: string;
+  links: string[];
+  body: string;
+}
+```
+
+Update `parseFrontmatter` and `serializePage` to match.
+
+- [ ] **Step 3: Update frontmatter.test.ts**
+
+Remove heat assertions, update `para_sources` → `sources` in test data.
+
+- [ ] **Step 4: Simplify repo.ts initRepo()**
+
+Remove PARA subdirectories. `initRepo()` should create:
+- `raw/` (single directory, no prescribed structure)
+- `wiki/entities/`, `wiki/concepts/`, `wiki/summaries/`, `wiki/synthesis/`
+- `wiki/index.md`, `wiki/log.md`
+
+- [ ] **Step 5: Update repo.test.ts**
+
+Remove assertions for `raw/projects`, `raw/areas`, `raw/resources`, `raw/archives`.
+Add assertion for `raw/` existing.
+
+- [ ] **Step 6: Remove lifecycle tool from apara.ts**
+
+- Remove `import { moveSource } from "./src/lifecycle.js"`
+- Remove `import { recalculateAllHeat } from "./src/heat.js"`
+- Delete the entire `apara_lifecycle` tool registration block
+- Remove heat recalculation from any remaining tools
+
+- [ ] **Step 7: Run tests and fix any failures**
+
+```bash
+cd extension && npx vitest run
+```
+
+All remaining tests (repo, frontmatter, ingest, git) should pass.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add -A extension/src/ extension/test/ extension/apara.ts
+git commit -m "refactor: remove PARA, simplify to LLM Wiki pattern"
+```
+
+---
+
 ## Phase 2: RPC Client Library
 
 Bridge between the web app and Pi Agent subprocess.
@@ -1492,39 +1598,13 @@ import { readdirSync, readFileSync, statSync, existsSync } from "fs";
 import { join } from "path";
 import { parseFrontmatter } from "../../extension/src/frontmatter.js";
 
-export interface ProjectInfo {
-  name: string;
-  sourceCount: number;
-  wikiPageCount: number;
-  lastActivity: Date;
-}
-
-export function getActiveProjects(rawDir: string, wikiDir: string): ProjectInfo[] {
-  const projectsDir = join(rawDir, "projects");
-  if (!existsSync(projectsDir)) return [];
-
-  return readdirSync(projectsDir)
-    .filter((d) => statSync(join(projectsDir, d)).isDirectory())
-    .map((name) => {
-      const dir = join(projectsDir, name);
-      const sources = readdirSync(dir).filter((f) => f.endsWith(".md"));
-      const wikiPages = countWikiPagesForSource(wikiDir, `projects/${name}`);
-      const lastMod = sources.reduce((max, f) => {
-        const t = statSync(join(dir, f)).mtime;
-        return t > max ? t : max;
-      }, new Date(0));
-
-      return { name, sourceCount: sources.length, wikiPageCount: wikiPages, lastActivity: lastMod };
-    });
-}
-
 export function getPendingSources(rawDir: string, wikiDir: string): string[] {
   // Reuse getUningestedSources from extension
   const { getUningestedSources } = require("../../extension/src/ingest.js");
   return getUningestedSources(rawDir, wikiDir);
 }
 
-export function getHotPages(wikiDir: string): { path: string; title: string; linkCount: number }[] {
+export function getActivePages(wikiDir: string): { path: string; title: string; linkCount: number }[] {
   const pages: { path: string; title: string; linkCount: number }[] = [];
   const subdirs = ["entities", "concepts", "summaries", "synthesis"];
 
@@ -1536,13 +1616,11 @@ export function getHotPages(wikiDir: string): { path: string; title: string; lin
       const content = readFileSync(join(dir, file), "utf-8");
       try {
         const page = parseFrontmatter(content);
-        if (page.heat === "hot") {
-          pages.push({
-            path: `${subdir}/${file}`,
-            title: page.title,
-            linkCount: page.links.length,
-          });
-        }
+        pages.push({
+          path: `${subdir}/${file}`,
+          title: page.title,
+          linkCount: page.links.length,
+        });
       } catch {
         continue;
       }
@@ -1561,34 +1639,14 @@ export function getRecentActivity(wikiDir: string, count = 10): string[] {
   return entries.slice(-count).reverse();
 }
 
-function countWikiPagesForSource(wikiDir: string, sourcePrefix: string): number {
-  let count = 0;
-  const subdirs = ["entities", "concepts", "summaries", "synthesis"];
-
-  for (const subdir of subdirs) {
-    const dir = join(wikiDir, subdir);
-    if (!existsSync(dir)) continue;
-
-    for (const file of readdirSync(dir).filter((f) => f.endsWith(".md"))) {
-      const content = readFileSync(join(dir, file), "utf-8");
-      try {
-        const page = parseFrontmatter(content);
-        if (page.para_sources.some((s) => s.startsWith(sourcePrefix))) count++;
-      } catch {
-        continue;
-      }
-    }
-  }
-  return count;
-}
 ```
 
 - [ ] **Step 2: Build Dashboard component**
 
 Create `app/src/components/Dashboard.tsx` (or framework equivalent) with four widget sections:
-- Active Projects cards
+- Recent Sources (recently added files in `raw/`)
 - Pending Inbox list (with count badge)
-- Hot Pages list (sorted by link count)
+- Active Pages list (most-connected wiki pages, sorted by link count)
 - Recent Activity feed
 
 Each widget fetches data from the repo reader via a server API route.
@@ -1605,7 +1663,7 @@ Create a test repo with some sample sources and wiki pages, verify the dashboard
 
 ```bash
 git add app/src/
-git commit -m "feat: dashboard view with project, inbox, hot pages, and activity widgets"
+git commit -m "feat: dashboard view with sources, inbox, active pages, and activity widgets"
 ```
 
 ---
@@ -1621,7 +1679,7 @@ Features:
 - Lists all wiki pages grouped by type (entities, concepts, summaries, synthesis)
 - Click a page to render its markdown content
 - Parse and make `[[wiki-links]]` clickable (navigate to linked page)
-- Show page metadata sidebar: title, type, heat badge, para_sources list, links list, dates
+- Show page metadata sidebar: title, type, sources list, links list, dates
 - Search input that filters pages by title
 
 Use a markdown rendering library (e.g., `react-markdown` with `remark-gfm`, or the framework equivalent).
@@ -1657,11 +1715,10 @@ git commit -m "feat: wiki browser view with markdown rendering and cross-referen
 - [ ] **Step 1: Build source manager component**
 
 Features:
-- Tree view of `raw/` showing projects/areas/resources/archives hierarchy
+- Tree view of `raw/` showing the directory structure (flat or topic-based)
 - Each file shows: name, ingestion status (✅ ingested / ⬜ pending)
 - Click a pending source → pre-fills chat with "ingest [path]"
-- Drag-and-drop file upload into any PARA category directory
-- Context menu on directories: "Move to Archives", "Move to Projects", etc. (triggers lifecycle via chat)
+- Drag-and-drop file upload into any directory
 
 - [ ] **Step 2: Add API route for source management**
 
@@ -1678,7 +1735,7 @@ Test uploading a file, seeing it appear as pending, clicking to trigger ingest v
 
 ```bash
 git add app/src/
-git commit -m "feat: source manager view with tree, upload, and lifecycle integration"
+git commit -m "feat: source manager view with tree and upload"
 ```
 
 ---
@@ -1693,7 +1750,7 @@ git commit -m "feat: source manager view with tree, upload, and lifecycle integr
 Features:
 - Parse `wiki/log.md` and render entries as a styled timeline
 - Each entry shows: date, action type (icon), detail text
-- Filter buttons: All, Ingest, Query, Lint, Lifecycle
+- Filter buttons: All, Ingest, Query, Lint
 - Search input
 - Click an entry to navigate to the relevant wiki page or source
 
@@ -1722,7 +1779,7 @@ git commit -m "feat: timeline view with filtering and search"
 - [ ] **Step 1: Wire Dashboard → Chat interactions**
 
 - Clicking a pending inbox item pre-fills chat with `ingest <path>`
-- Clicking an active project opens its wiki pages in Wiki Browser
+- Clicking an active page opens it in Wiki Browser
 
 - [ ] **Step 2: Wire Chat → Wiki Browser**
 
@@ -1731,7 +1788,6 @@ git commit -m "feat: timeline view with filtering and search"
 
 - [ ] **Step 3: Wire Source Manager → Chat**
 
-- "Move to Archives" context action sends lifecycle command to chat
 - Click pending source sends ingest command to chat
 
 - [ ] **Step 4: Verify all cross-panel interactions**
@@ -1795,11 +1851,7 @@ You are maintaining an APARA knowledge base. Follow these conventions for all wi
 
 ## Directory Structure
 
-- `raw/` — PARA-organized source documents (never modify)
-  - `projects/` — active project sources
-  - `areas/` — ongoing life area sources
-  - `resources/` — reference material
-  - `archives/` — inactive/completed sources
+- `raw/` — source documents (never modify). Organized however the user wants (flat or by topic).
 - `wiki/` — LLM-maintained knowledge graph
   - `entities/` — people, places, tools, specific things
   - `concepts/` — ideas, principles, patterns
@@ -1816,9 +1868,8 @@ Every wiki page MUST have YAML frontmatter:
 ---
 title: "Page Title"
 type: entity | concept | summary | synthesis
-para_sources:
+sources:
   - path/relative/to/raw/dir
-heat: hot | cold
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 links:
