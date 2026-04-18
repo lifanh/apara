@@ -20,8 +20,8 @@
 | 1 | Task 6: Ingest Tool | ✅ Done | `4b4a8c9` |
 | 1 | Task 7: Lifecycle Tool | 🗑️ Removed (PARA pivot) | `c1e5af3` |
 | 1 | Task 8: Lint and Query Tools | ✅ Done | `89b1880` |
-| 1 | Task 8.5: PARA Removal Refactor | ⬜ Pending | — |
-| 2 | Task 9: Pi Agent RPC Client | ⬜ Pending | — |
+| 1 | Task 8.5: PARA Removal Refactor | ✅ Done | (no-op, already clean) |
+| 2 | Task 9: Pi Agent RPC Client | ✅ Done | — |
 | 3 | Task 10: Web App Scaffold | ⬜ Pending | — |
 | 3 | Task 11: Chat Panel — Pi Agent Integration | ⬜ Pending | — |
 | 3 | Task 12: Dashboard View | ⬜ Pending | — |
