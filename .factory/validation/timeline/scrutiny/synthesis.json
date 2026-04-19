@@ -1,0 +1,48 @@
+{
+  "milestone": "timeline",
+  "round": 1,
+  "status": "fail",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && npx vitest run && cd /Users/lifan/dev/ai/apara/extension && npx vitest run",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.app.json && bunx tsc --noEmit -p tsconfig.server.json",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && npx oxlint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "failedFeatures": [
+      "timeline-view"
+    ]
+  },
+  "blockingIssues": [
+    {
+      "featureId": "timeline-view",
+      "severity": "blocking",
+      "description": "Timeline source-path detection regex is too permissive and classifies non-source dotted text (for example, \"Node.js\") as source links, which can trigger incorrect Sources-tab navigation."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "user-testing-validator skill",
+      "suggestion": "Add a timeline negative-navigation assertion ensuring entries without wiki/source references are not clickable and do not switch tabs.",
+      "evidence": "Review timeline-view found SOURCE_PATH_PATTERN false positives for dotted non-path text; current timeline assertions validate positive navigation only.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}

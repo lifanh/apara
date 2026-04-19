@@ -1,0 +1,28 @@
+{
+  "featureId": "timeline-view",
+  "reviewedAt": "2026-04-19T14:08:48Z",
+  "commitId": "2bab33a85cd12f89cfcafa5527c4f2bcf77965a7",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "fail",
+  "codeReview": {
+    "summary": "Timeline view is largely complete, but navigation target detection is overly broad and can misclassify ordinary dotted text as a source path, causing incorrect tab navigation on entry click.",
+    "issues": [
+      {
+        "file": "app/src/lib/timeline.ts",
+        "line": 19,
+        "severity": "blocking",
+        "description": "SOURCE_PATH_PATTERN matches generic dotted tokens (e.g., \"Node.js\", \"v1.2\") as source references. Because Timeline.tsx treats any source match as clickable and calls onTabChange(\"sources\"), non-source timeline entries can incorrectly navigate to Sources. Evidence: regex at line 19 and local reproduction (`'What is Node.js?'.match(SOURCE_PATH_PATTERN)` => \"Node.js\")."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "Timeline validation coverage does not check false-positive navigation cases for non-path dotted text in log details.",
+      "evidence": "validation-contract.md VAL-TL-005 verifies wiki-page navigation only; no assertion verifies that entries without wiki/source references remain non-clickable or that source detection excludes tokens like \"Node.js\"."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Review failed due to a blocking navigation-classification bug: source detection regex is too permissive and can trigger incorrect Sources-tab navigation for non-source text."
+}
