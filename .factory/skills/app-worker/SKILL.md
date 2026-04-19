@@ -65,8 +65,8 @@ For server-side logic:
 
 ```bash
 cd /Users/lifan/dev/ai/apara/app && npx vitest run
-cd /Users/lifan/dev/ai/apara && npx tsc --noEmit -p app/tsconfig.app.json
-cd /Users/lifan/dev/ai/apara && npx tsc --noEmit -p app/tsconfig.server.json
+cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.app.json
+cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.server.json
 cd /Users/lifan/dev/ai/apara/app && npx oxlint
 ```
 
