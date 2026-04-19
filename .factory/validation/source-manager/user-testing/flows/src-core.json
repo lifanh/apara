@@ -1,0 +1,156 @@
+{
+  "groupId": "src-core",
+  "milestone": "source-manager",
+  "tool": "agent-browser",
+  "toolsUsed": ["agent-browser", "curl"],
+  "status": "completed_with_failures",
+  "testedAt": "2026-04-19T13:42:30Z",
+  "assertions": [
+    {
+      "id": "VAL-SRC-001",
+      "status": "pass",
+      "reason": "Sources tab rendered tree entries matching GET /api/sources output (articles/, books/, articles/ai-safety.md, books/sample-book.md, rust-intro.md).",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-001-sources-tree.png",
+          "observation": "Sources tab active with full tree visible."
+        },
+        {
+          "file": "source-manager/src-core/network-performance-entries.json",
+          "observation": "Contains fetch requests to /api/sources."
+        },
+        {
+          "file": "source-manager/src-core/api-sources-headers.txt",
+          "observation": "GET /api/sources returned HTTP/1.1 200 OK."
+        }
+      ]
+    },
+    {
+      "id": "VAL-SRC-002",
+      "status": "fail",
+      "reason": "books/sample-book.md is shown as pending in the Sources tree, but wiki/entities/typescript.md frontmatter lists sources: [books/sample-book.md], so it should be ingested.",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-002-status-indicators.png",
+          "observation": "UI label shows \"sample-book.md pending\"."
+        },
+        {
+          "file": "source-manager/src-core/api-dashboard-headers.txt",
+          "observation": "GET /api/dashboard returned HTTP 200 for pending list source.",
+          "note": "API content observed during run included sample-book.md in pending."
+        },
+        {
+          "file": "source-manager/src-core/assertion-observations.txt",
+          "observation": "Recorded mismatch between UI pending indicator and wiki frontmatter source reference."
+        }
+      ]
+    },
+    {
+      "id": "VAL-SRC-003",
+      "status": "pass",
+      "reason": "Clicking pending source pre-filled chat input with ingest command and did not auto-send.",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-003-chat-prefill.png",
+          "observation": "After clicking ai-safety.md, input value was ingest articles/ai-safety.md."
+        },
+        {
+          "file": "source-manager/src-core/console-errors-final.txt",
+          "observation": "No console errors captured."
+        },
+        {
+          "file": "source-manager/src-core/assertion-observations.txt",
+          "observation": "No new chat message appeared after pre-fill action."
+        }
+      ]
+    },
+    {
+      "id": "VAL-SRC-004",
+      "status": "pass",
+      "reason": "Clicking pending source showed markdown content preview while preserving ingest pre-fill behavior.",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-004-content-preview.png",
+          "observation": "Content preview displayed AI Safety markdown text."
+        },
+        {
+          "file": "source-manager/src-core/network-performance-entries.json",
+          "observation": "Includes /api/sources?path=articles%2Fai-safety.md fetch request."
+        },
+        {
+          "file": "source-manager/src-core/assertion-observations.txt",
+          "observation": "Preview and chat prefill observed simultaneously for pending file."
+        }
+      ]
+    },
+    {
+      "id": "VAL-SRC-005",
+      "status": "pass",
+      "reason": "With raw/ temporarily emptied, Sources view displayed a clear empty-state message and remained usable.",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-005-empty-state.png",
+          "observation": "Displayed \"No files in raw/ yet\" empty state."
+        },
+        {
+          "file": "source-manager/src-core/console-errors-final.txt",
+          "observation": "No console errors captured during empty-state validation."
+        },
+        {
+          "file": "source-manager/src-core/assertion-observations.txt",
+          "observation": "Fixture was restored after test."
+        }
+      ]
+    },
+    {
+      "id": "VAL-SRC-006",
+      "status": "pass",
+      "reason": "Directory nodes expanded/collapsed correctly and child visibility changed as expected.",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-006-collapsed.png",
+          "observation": "After collapsing articles, ai-safety.md was hidden."
+        },
+        {
+          "file": "source-manager/src-core/VAL-SRC-006-expanded.png",
+          "observation": "After expanding, nested file entries reappeared under directories."
+        }
+      ]
+    },
+    {
+      "id": "VAL-SRC-007",
+      "status": "pass",
+      "reason": "Uploading a file through the Source Manager upload control triggered POST /api/sources/upload, rendered the file as pending, and created the file on disk; fixture was restored after validation.",
+      "evidence": [
+        {
+          "file": "source-manager/src-core/VAL-SRC-007-uploaded-file-verified.png",
+          "observation": "upload-src007.md appeared in tree with pending indicator."
+        },
+        {
+          "file": "source-manager/src-core/network-performance-entries.json",
+          "observation": "Includes fetch requests to /api/sources/upload followed by /api/sources refresh."
+        },
+        {
+          "file": "source-manager/src-core/VAL-SRC-007-file-on-disk.txt",
+          "observation": "Confirmed file existed on disk during validation at /tmp/apara-utv-source-manager-XZO4mB/raw/upload-src007.md."
+        }
+      ]
+    }
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser network requests command returned \"No requests captured\" during this run.",
+      "resolved": true,
+      "resolution": "Captured API request evidence via performance.getEntriesByType('resource') and stored in network-performance-entries.json.",
+      "affectedAssertions": ["VAL-SRC-001", "VAL-SRC-002", "VAL-SRC-004", "VAL-SRC-007"]
+    },
+    {
+      "description": "Direct OS-level drag gesture is not exposed in this headless CLI workflow.",
+      "resolved": true,
+      "resolution": "Validated upload path via Source Manager file input control, confirming POST /api/sources/upload + pending tree render + on-disk file creation.",
+      "affectedAssertions": ["VAL-SRC-007"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 7 source-manager assertions: 6 passed, 1 failed (VAL-SRC-002 ingestion status mismatch for books/sample-book.md)."
+}

@@ -44,3 +44,12 @@
 
 **Available headroom:** ~18.2GB (26GB free * 0.7)
 **Max concurrent validators:** 5
+
+## Flow Validator Guidance: agent-browser
+
+- Use only `http://localhost:5173` (UI) and `http://localhost:3000` (API).
+- Stay inside the assigned milestone assertions and evidence directory.
+- Do not alter repository code or mission files; only interact through UI/API and test-repo fixtures.
+- For source-manager assertions, run serially within one browser context to avoid shared-state collisions (uploads, empty-directory checks, tree refreshes).
+- In headless runs, if OS-level drag gestures are unavailable, validate upload assertions through the Source Manager file input while still verifying `POST /api/sources/upload`, tree update, and on-disk file creation.
+- Capture required evidence for each assertion: screenshots plus specified network/console artifacts.
