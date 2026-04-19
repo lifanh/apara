@@ -14,7 +14,7 @@ Git Repo (data) → Pi Agent (engine) → Web App (UI)
 
 - **Git Repo** — a standard git repository containing raw source documents (`raw/`) and the LLM-maintained wiki (`wiki/`). Human-readable markdown, synced across devices via git.
 - **Pi Agent Extension** — a [Pi Coding Agent](https://github.com/nichochar/pi-coding-agent) extension providing three tools: ingest, query, and lint.
-- **Web App** — a TypeScript web app (TBD) communicating with Pi Agent via RPC (JSON Lines over stdin/stdout).
+- **Web App** — a React 19 + Tailwind CSS + shadcn UI with a Bun backend server, communicating with Pi Agent via RPC (JSON Lines over stdin/stdout). REST API + WebSocket for real-time updates.
 
 ## Knowledge Repo Structure
 
@@ -58,8 +58,14 @@ apara/                            # this repo (application code)
 │   │   ├── frontmatter.ts        # wiki page YAML frontmatter parser/serializer
 │   │   ├── ingest.ts             # log/index helpers, ingestion detection
 │   │   └── git.ts                # git operations (add, commit, status)
+│   ├── templates/                # template files
 │   └── test/                     # vitest tests
-├── app/                          # web app (TBD)
+├── app/                          # web app
+│   ├── src/                      # React frontend
+│   │   └── components/           # Dashboard, WikiBrowser, SourceManager,
+│   │                             # ChatPanel, Timeline, SyncStatus
+│   ├── server/                   # Bun HTTP/WebSocket server (REST API + Pi Agent RPC)
+│   └── test/                     # tests
 └── doc/
     ├── llm-wiki.md               # LLM Wiki pattern reference
     └── specs/                    # design spec and implementation plan
@@ -69,18 +75,24 @@ apara/                            # this repo (application code)
 
 ```bash
 # Install dependencies
-npm install
+bun install
 
-# Run tests
-cd extension && npx vitest run
+# Run extension tests
+cd extension && bunx vitest run
 
-# Run tests in watch mode
-cd extension && npx vitest
+# Run app dev server
+cd app && bunx vp dev
+
+# Run app backend server
+cd app && bun run server/index.ts --repo /path/to/knowledge-repo
+
+# Run app tests
+cd app && bunx vp test
 ```
 
 ## Status
 
-Phase 1 (Pi Agent Extension) is mostly complete — 3 tools, 14 tests passing. See [the implementation plan](doc/specs/2026-04-12-apara-plan.md) for full progress.
+Phase 1 (Pi Agent Extension) is complete. Phase 2 (Web App) is well underway — React frontend and Bun backend server are functional. See [the implementation plan](doc/specs/2026-04-12-apara-plan.md) for full progress.
 
 ## Design Documents
 

@@ -11,26 +11,33 @@ APARA is an LLM Wiki second brain system. This repo contains the **application c
 - `extension/` — Pi Agent extension (the engine). Entry point: `extension/apara.ts`
   - `extension/src/` — modules: `repo.ts`, `frontmatter.ts`, `ingest.ts`, `git.ts`
   - `extension/test/` — vitest test files, one per module
-- `app/` — web app workspace (not yet built)
+  - `extension/templates/` — template files (e.g., AGENTS.md for knowledge repos)
+- `app/` — web app (React frontend + Bun server)
+  - `app/src/` — React frontend components (Dashboard, WikiBrowser, SourceManager, ChatPanel, Timeline, SyncStatus)
+  - `app/server/` — Bun HTTP/WebSocket server (`index.ts`)
+  - `app/test/` — test files
 - `doc/specs/` — design spec and implementation plan
 - `doc/llm-wiki.md` — reference document for the LLM Wiki pattern
 
 ## Tech Stack
 
 - **Language:** TypeScript (ESM, `"type": "module"`)
-- **Runtime:** Node.js
+- **Runtime:** Bun
 - **Test framework:** Vitest
-- **Package manager:** npm with workspaces (`extension`, `app`)
+- **Package manager:** Bun with workspaces (`extension`, `app`)
+- **Linting:** oxlint (root `.oxlintrc.json` + per-workspace configs)
 - **Extension framework:** [Pi Coding Agent](https://github.com/nichochar/pi-coding-agent) — registers commands and tools via `ExtensionAPI`
 - **Schema validation:** `@sinclair/typebox`
 - **YAML:** `yaml` package for frontmatter and config parsing
+- **Web app frontend:** React 19 + Tailwind CSS v4 + shadcn (base-nova style) + Vite (via `vite-plus`)
+- **Web app backend:** Bun HTTP server with REST API + WebSocket
 
 ## Conventions
 
 ### Code Style
 
 - Use `import`/`export` (ESM), not `require`
-- Imports use `.js` extension for local modules (e.g., `import { foo } from "./bar.js"`)
+- Extension imports use `.js` extension for local modules (e.g., `import { foo } from "./bar.js"`); app uses bundler resolution (no extension needed)
 - Prefer `const` over `let`; avoid `var`
 - Functions are plain named exports, not classes
 - No comments unless the code is genuinely complex
@@ -39,14 +46,16 @@ APARA is an LLM Wiki second brain system. This repo contains the **application c
 ### File Naming
 
 - Source files: `kebab-case.ts` (e.g., `frontmatter.ts`, `repo.ts`)
-- Test files: `<module>.test.ts` in `extension/test/`
-- One module = one test file
+- Test files: `<module>.test.ts` in `extension/test/` or `app/test/`
 
 ### Testing
 
 - Each module has a corresponding test file
-- Tests use temp directories (`mkdtempSync`) cleaned up in `afterEach`
-- Run tests: `cd extension && npx vitest run`
+- Extension tests use temp directories (`mkdtempSync`) cleaned up in `afterEach`
+- Run extension tests: `cd extension && npx vitest run`
+- Run app tests: `cd app && npx vp test`
+- Dev server: `cd app && npx vp dev`
+- Build app: `cd app && npx vp build`
 - All tests must pass before committing
 
 ### Git
