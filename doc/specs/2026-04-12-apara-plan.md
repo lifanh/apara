@@ -21,9 +21,9 @@
 | 1 | Task 7: Lifecycle Tool | 🗑️ Removed (PARA pivot) | `c1e5af3` |
 | 1 | Task 8: Lint and Query Tools | ✅ Done | `89b1880` |
 | 1 | Task 8.5: PARA Removal Refactor | ✅ Done | (no-op, already clean) |
-| 2 | Task 9: Pi Agent RPC Client | ✅ Done | — |
-| 3 | Task 10: Web App Scaffold | ⬜ Pending | — |
-| 3 | Task 11: Chat Panel — Pi Agent Integration | ⬜ Pending | — |
+| 2 | Task 9: Pi Agent RPC Client | ✅ Done | `f2c410c` |
+| 3 | Task 10: Web App Scaffold | ✅ Done | `52f9d74`..`5a9dfcd` |
+| 3 | Task 11: Chat Panel — Pi Agent Integration | ✅ Done | `63362a2`..latest |
 | 3 | Task 12: Dashboard View | ⬜ Pending | — |
 | 3 | Task 13: Wiki Browser View | ⬜ Pending | — |
 | 3 | Task 14: Source Manager View | ⬜ Pending | — |
@@ -32,7 +32,7 @@
 | 4 | Task 17: Git Sync UI | ⬜ Pending | — |
 | 4 | Task 18: AGENTS.md Schema File | ⬜ Pending | — |
 
-**Current state:** Phase 1 partially complete. Pivoting from PARA-integrated design to plain LLM Wiki. Tasks 3 (heat) and 7 (lifecycle) are removed. Next: Task 8.5 (PARA removal refactor) then 3 tools (ingest, query, lint).
+**Current state:** Phases 1, 2, and Task 10–11 of Phase 3 complete. The chat panel is fully wired: `useChat` hook manages WebSocket connection, message state, and streaming; ChatPanel renders user/assistant messages with live streaming cursor and tool status indicators. Next: Tasks 12–15 (dashboard, wiki browser, source manager, timeline views).
 
 ---
 
