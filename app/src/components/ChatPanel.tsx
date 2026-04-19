@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,11 +7,16 @@ import { findWikiPageMentions } from "@/lib/wiki-links";
 
 interface ChatPanelProps {
   onOpenWikiPage: (path: string) => void;
+  inputValue: string;
+  onInputChange: (value: string) => void;
 }
 
-export function ChatPanel({ onOpenWikiPage }: ChatPanelProps) {
+export function ChatPanel({
+  onOpenWikiPage,
+  inputValue,
+  onInputChange,
+}: ChatPanelProps) {
   const { messages, isConnected, isStreaming, send, abort } = useChat();
-  const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -20,10 +25,10 @@ export function ChatPanel({ onOpenWikiPage }: ChatPanelProps) {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const text = input.trim();
+    const text = inputValue.trim();
     if (!text || !isConnected || isStreaming) return;
     send(text);
-    setInput("");
+    onInputChange("");
   }
 
   return (
@@ -54,8 +59,8 @@ export function ChatPanel({ onOpenWikiPage }: ChatPanelProps) {
       </ScrollArea>
       <form onSubmit={handleSubmit} className="flex gap-2 border-t p-3">
         <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          value={inputValue}
+          onChange={(e) => onInputChange(e.target.value)}
           placeholder={isConnected ? "Type here…" : "Connecting…"}
           disabled={!isConnected}
           className="flex-1"
@@ -68,7 +73,7 @@ export function ChatPanel({ onOpenWikiPage }: ChatPanelProps) {
           <Button
             type="submit"
             size="sm"
-            disabled={!input.trim() || !isConnected}
+            disabled={!inputValue.trim() || !isConnected}
           >
             Send
           </Button>

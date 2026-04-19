@@ -1,12 +1,14 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "fs";
-import { join, relative, resolve } from "path";
+import { existsSync, readFileSync } from "fs";
+import { join, resolve } from "path";
 import { parseArgs } from "util";
 import type { ServerWebSocket } from "bun";
 import { parseClientMessage, type ServerMessage } from "../src/lib/ws-types.js";
 import { checkAuth, createAuthCookie, isAuthEnabled, validateOrigin } from "./auth.js";
 import { getDashboardData } from "./dashboard.js";
+import { safePath } from "./path-utils.js";
 import { PiRpcClient } from "./lib/rpc-client.js";
 import { PiManager } from "./pi-manager.js";
+import { getSourcePreview, listSources, writeUploadedSource } from "./sources.js";
 import { getWikiPageData, listWikiPages } from "./wiki.js";
 
 const { values } = parseArgs({
@@ -73,18 +75,6 @@ function cleanupSession() {
     clearTimeout(heartbeatTimer);
     heartbeatTimer = null;
   }
-}
-
-function safePath(base: string, requested: string): string | null {
-  const fullPath = resolve(base, requested);
-  const rel = relative(base, fullPath);
-  if (rel.startsWith("..") || rel === "") {
-    if (rel === "") {
-      return fullPath;
-    }
-    return null;
-  }
-  return fullPath;
 }
 
 const server = Bun.serve({
@@ -180,39 +170,54 @@ const server = Bun.serve({
             return new Response("Not found", { status: 404 });
           }
 
-          const fileStat = statSync(fullPath);
-          if (
-            fileStat.size < 1_000_000 &&
-            /\.(md|txt|yaml|yml|json|csv|tsv)$/i.test(requestedPath)
-          ) {
-            return new Response(readFileSync(fullPath, "utf-8"), {
-              headers: { "Content-Type": "text/plain" },
+          const preview = getSourcePreview(fullPath, requestedPath);
+          if (typeof preview === "string") {
+            return new Response(preview, {
+              headers: { "Content-Type": "text/plain; charset=utf-8" },
             });
           }
 
-          return Response.json({
-            name: requestedPath,
-            size: fileStat.size,
-            type: "binary",
-          });
+          return Response.json(preview);
         }
 
-        if (!existsSync(rawPath)) {
-          return Response.json([]);
+        return Response.json(listSources(rawPath));
+      }
+
+      if (url.pathname === "/api/sources/upload" && req.method === "POST") {
+        let formData: FormData;
+        try {
+          formData = await req.formData();
+        } catch {
+          return new Response("Invalid multipart payload", { status: 400 });
         }
 
-        const files = readdirSync(rawPath, { recursive: true }) as string[];
-        return Response.json(
-          files.map((file) => {
-            const fullPath = join(rawPath, file);
-            const fileStat = statSync(fullPath);
-            return {
-              name: file,
-              size: fileStat.size,
-              isDirectory: fileStat.isDirectory(),
-            };
-          })
-        );
+        const file = formData.get("file");
+        const pathField = formData.get("path");
+        if (!(file instanceof File)) {
+          return new Response("file is required", { status: 400 });
+        }
+        if (pathField !== null && typeof pathField !== "string") {
+          return new Response("Invalid path", { status: 400 });
+        }
+
+        try {
+          const relativePath = writeUploadedSource(
+            rawPath,
+            pathField ?? "",
+            file.name,
+            new Uint8Array(await file.arrayBuffer()),
+          );
+          return Response.json({ ok: true, path: relativePath });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Upload failed";
+          if (message === "Forbidden") {
+            return new Response(message, { status: 403 });
+          }
+          if (message === "Invalid file name") {
+            return new Response(message, { status: 400 });
+          }
+          return new Response(message, { status: 500 });
+        }
       }
 
       if (url.pathname === "/api/log") {

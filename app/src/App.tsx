@@ -10,6 +10,7 @@ import { ChatPanel } from "@/components/ChatPanel";
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [selectedWikiPath, setSelectedWikiPath] = useState<string | null>(null);
+  const [chatInput, setChatInput] = useState("");
 
   function openWikiPage(path: string) {
     setSelectedWikiPath(path.startsWith("wiki/") ? path.slice(5) : path);
@@ -25,11 +26,16 @@ function App() {
             onTabChange={setActiveTab}
             selectedWikiPath={selectedWikiPath}
             onOpenWikiPage={openWikiPage}
+            setChatInput={setChatInput}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={35} minSize={20}>
-          <ChatPanel onOpenWikiPage={openWikiPage} />
+          <ChatPanel
+            onOpenWikiPage={openWikiPage}
+            inputValue={chatInput}
+            onInputChange={setChatInput}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
