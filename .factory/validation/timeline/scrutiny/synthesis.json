@@ -1,7 +1,7 @@
 {
   "milestone": "timeline",
-  "round": 1,
-  "status": "fail",
+  "round": 2,
+  "status": "pass",
   "validatorsRun": {
     "test": {
       "passed": true,
@@ -21,28 +21,20 @@
   },
   "reviewsSummary": {
     "total": 1,
-    "passed": 0,
-    "failed": 1,
-    "failedFeatures": [
-      "timeline-view"
-    ]
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
   },
-  "blockingIssues": [
-    {
-      "featureId": "timeline-view",
-      "severity": "blocking",
-      "description": "Timeline source-path detection regex is too permissive and classifies non-source dotted text (for example, \"Node.js\") as source links, which can trigger incorrect Sources-tab navigation."
-    }
-  ],
+  "blockingIssues": [],
   "appliedUpdates": [],
   "suggestedGuidanceUpdates": [
     {
-      "target": "user-testing-validator skill",
-      "suggestion": "Add a timeline negative-navigation assertion ensuring entries without wiki/source references are not clickable and do not switch tabs.",
-      "evidence": "Review timeline-view found SOURCE_PATH_PATTERN false positives for dotted non-path text; current timeline assertions validate positive navigation only.",
+      "target": "app-worker skill",
+      "suggestion": "Allow non-UI app fixes (pure utility/test logic) to skip mandatory agent-browser verification when no UI surface or browser-observable behavior changed.",
+      "evidence": "Review fix-timeline-source-path-regex found no UI impact, but procedure pressure to run browser checks still appears in skill guidance.",
       "isSystemic": false
     }
   ],
   "rejectedObservations": [],
-  "previousRound": null
+  "previousRound": ".factory/validation/timeline/scrutiny/synthesis.round1.json"
 }

@@ -1,0 +1,21 @@
+{
+  "featureId": "fix-timeline-source-path-regex",
+  "reviewedAt": "2026-04-19T14:16:43Z",
+  "commitId": "b864ffb75ce10c99f3db5dc9f348c28ebcbde695",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The fix directly resolves the prior blocking issue from timeline-view by tightening source-path detection to require at least one directory separator and a whitelisted extension, and adds targeted regression tests for both negative and positive cases.",
+    "issues": []
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The app-worker skill procedure is too rigid for non-UI app fixes: it marks runs as procedure deviations when agent-browser is skipped even if the change is purely utility/test logic.",
+      "evidence": "Feature handoff for fix-timeline-source-path-regex sets skillFeedback.followedProcedure=false due skipping app-worker step 6. SKILL.md step 6 currently prescribes manual browser verification as a required step."
+    }
+  ],
+  "addressesFailureFrom": ".factory/validation/timeline/scrutiny/reviews/timeline-view.json",
+  "summary": "Reviewed fix-timeline-source-path-regex against both the original timeline-view diff and the fix diff; the regex overmatch defect is corrected and regression coverage now prevents dotted non-path false positives like Node.js and v2.0 while preserving valid source-path detection."
+}
