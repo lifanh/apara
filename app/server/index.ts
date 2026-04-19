@@ -4,6 +4,7 @@ import { parseArgs } from "util";
 import type { ServerWebSocket } from "bun";
 import { parseClientMessage, type ServerMessage } from "../src/lib/ws-types.js";
 import { checkAuth, createAuthCookie, isAuthEnabled, validateOrigin } from "./auth.js";
+import { getDashboardData } from "./dashboard.js";
 import { PiRpcClient } from "./lib/rpc-client.js";
 import { PiManager } from "./pi-manager.js";
 
@@ -132,6 +133,10 @@ const server = Bun.serve({
         if (!checkAuth(cookie)) {
           return new Response("Unauthorized", { status: 401 });
         }
+      }
+
+      if (url.pathname === "/api/dashboard") {
+        return Response.json(getDashboardData(wikiPath, rawPath));
       }
 
       if (url.pathname === "/api/config") {

@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dashboard } from "@/components/Dashboard";
 
 export function ContentPanel() {
   return (
@@ -9,8 +10,8 @@ export function ContentPanel() {
         <TabsTrigger value="sources">Sources</TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
       </TabsList>
-      <TabsContent value="dashboard" className="flex-1 p-4">
-        <p className="text-muted-foreground">Dashboard — coming soon</p>
+      <TabsContent value="dashboard" className="flex-1 overflow-hidden">
+        <Dashboard />
       </TabsContent>
       <TabsContent value="wiki" className="flex-1 p-4">
         <p className="text-muted-foreground">Wiki — coming soon</p>

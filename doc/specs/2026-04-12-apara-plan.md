@@ -24,7 +24,7 @@
 | 2 | Task 9: Pi Agent RPC Client | ✅ Done | `f2c410c` |
 | 3 | Task 10: Web App Scaffold | ✅ Done | `52f9d74`..`5a9dfcd` |
 | 3 | Task 11: Chat Panel — Pi Agent Integration | ✅ Done | `63362a2`..latest |
-| 3 | Task 12: Dashboard View | ⬜ Pending | — |
+| 3 | Task 12: Dashboard View | ✅ Done | latest |
 | 3 | Task 13: Wiki Browser View | ⬜ Pending | — |
 | 3 | Task 14: Source Manager View | ⬜ Pending | — |
 | 3 | Task 15: Timeline View | ⬜ Pending | — |
@@ -32,7 +32,7 @@
 | 4 | Task 17: Git Sync UI | ⬜ Pending | — |
 | 4 | Task 18: AGENTS.md Schema File | ⬜ Pending | — |
 
-**Current state:** Phases 1, 2, and Task 10–11 of Phase 3 complete. The chat panel is fully wired: `useChat` hook manages WebSocket connection, message state, and streaming; ChatPanel renders user/assistant messages with live streaming cursor and tool status indicators. Next: Tasks 12–15 (dashboard, wiki browser, source manager, timeline views).
+**Current state:** Phases 1, 2, and Tasks 10–12 of Phase 3 complete. Dashboard view shows stats bar (wiki pages, sources, pending count), pending inbox, active pages sorted by link count, and recent activity feed — all fetched from `/api/dashboard`. Next: Tasks 13–15 (wiki browser, source manager, timeline views).
 
 ---
 
