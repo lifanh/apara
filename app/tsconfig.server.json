@@ -6,7 +6,9 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["bun-types"]
+    "types": ["bun"],
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/tsconfig.server.tsbuildinfo"
   },
   "include": ["server/**/*.ts"]
 }

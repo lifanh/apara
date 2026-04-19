@@ -67,19 +67,26 @@ export class PiManager {
     }
 
     switch (event.type) {
-      case "message_update":
+      case "message_update": {
+        const assistantEvent = event.assistantMessageEvent as
+          | { type?: unknown; delta?: unknown }
+          | undefined;
         if (
-          event.assistantMessageEvent?.type === "text_delta" &&
-          typeof event.assistantMessageEvent.delta === "string"
+          assistantEvent?.type === "text_delta" &&
+          typeof assistantEvent.delta === "string"
         ) {
           this.emit({
             type: "assistant_delta",
             runId: this.activeRunId,
-            text: event.assistantMessageEvent.delta,
+            text: assistantEvent.delta,
           });
         }
         break;
-      case "tool_execution_start":
+      }
+      case "tool_execution_start": {
+        if (typeof event.toolName !== "string") {
+          break;
+        }
         this.emit({
           type: "tool_status",
           runId: this.activeRunId,
@@ -87,7 +94,11 @@ export class PiManager {
           status: "start",
         });
         break;
-      case "tool_execution_end":
+      }
+      case "tool_execution_end": {
+        if (typeof event.toolName !== "string") {
+          break;
+        }
         this.emit({
           type: "tool_status",
           runId: this.activeRunId,
@@ -95,6 +106,7 @@ export class PiManager {
           status: "end",
         });
         break;
+      }
     }
   }
 }

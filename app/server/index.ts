@@ -7,6 +7,7 @@ import { checkAuth, createAuthCookie, isAuthEnabled, validateOrigin } from "./au
 import { getDashboardData } from "./dashboard.js";
 import { PiRpcClient } from "./lib/rpc-client.js";
 import { PiManager } from "./pi-manager.js";
+import { getWikiPageData, listWikiPages } from "./wiki.js";
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -114,7 +115,7 @@ const server = Bun.serve({
       }
 
       const body = (await req.json()) as { token?: string };
-      if (body.token === process.env.APARA_AUTH_TOKEN) {
+      if (body.token && body.token === process.env.APARA_AUTH_TOKEN) {
         return new Response(JSON.stringify({ ok: true }), {
           headers: {
             "Content-Type": "application/json",
@@ -156,17 +157,16 @@ const server = Bun.serve({
           if (!existsSync(fullPath)) {
             return new Response("Not found", { status: 404 });
           }
-          return new Response(readFileSync(fullPath, "utf-8"), {
-            headers: { "Content-Type": "text/markdown" },
-          });
+
+          const page = getWikiPageData(wikiPath, requestedPath);
+          if (!page) {
+            return new Response("Not found", { status: 404 });
+          }
+
+          return Response.json(page);
         }
 
-        if (!existsSync(wikiPath)) {
-          return Response.json([]);
-        }
-
-        const files = readdirSync(wikiPath, { recursive: true }) as string[];
-        return Response.json(files.filter((file) => file.endsWith(".md")));
+        return Response.json(listWikiPages(wikiPath));
       }
 
       if (url.pathname === "/api/sources") {

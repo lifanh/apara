@@ -1,9 +1,22 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dashboard } from "@/components/Dashboard";
+import { WikiBrowser } from "@/components/WikiBrowser";
 
-export function ContentPanel() {
+interface ContentPanelProps {
+  activeTab: string;
+  onTabChange: (value: string) => void;
+  selectedWikiPath: string | null;
+  onOpenWikiPage: (path: string) => void;
+}
+
+export function ContentPanel({
+  activeTab,
+  onTabChange,
+  selectedWikiPath,
+  onOpenWikiPage,
+}: ContentPanelProps) {
   return (
-    <Tabs defaultValue="dashboard" className="flex h-full flex-col">
+    <Tabs value={activeTab} onValueChange={onTabChange} className="flex h-full flex-col">
       <TabsList className="w-full justify-start rounded-none border-b">
         <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         <TabsTrigger value="wiki">Wiki</TabsTrigger>
@@ -13,8 +26,11 @@ export function ContentPanel() {
       <TabsContent value="dashboard" className="flex-1 overflow-hidden">
         <Dashboard />
       </TabsContent>
-      <TabsContent value="wiki" className="flex-1 p-4">
-        <p className="text-muted-foreground">Wiki — coming soon</p>
+      <TabsContent value="wiki" className="flex-1 overflow-hidden">
+        <WikiBrowser
+          selectedPath={selectedWikiPath}
+          onOpenPage={onOpenWikiPage}
+        />
       </TabsContent>
       <TabsContent value="sources" className="flex-1 p-4">
         <p className="text-muted-foreground">Sources — coming soon</p>

@@ -1,10 +1,15 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChat, type ChatMessage } from "@/lib/use-chat";
+import { findWikiPageMentions } from "@/lib/wiki-links";
 
-export function ChatPanel() {
+interface ChatPanelProps {
+  onOpenWikiPage: (path: string) => void;
+}
+
+export function ChatPanel({ onOpenWikiPage }: ChatPanelProps) {
   const { messages, isConnected, isStreaming, send, abort } = useChat();
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -38,7 +43,11 @@ export function ChatPanel() {
         )}
         <div className="space-y-4">
           {messages.map((msg) => (
-            <MessageBubble key={msg.id} message={msg} />
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              onOpenWikiPage={onOpenWikiPage}
+            />
           ))}
         </div>
         <div ref={bottomRef} />
@@ -69,7 +78,13 @@ export function ChatPanel() {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  onOpenWikiPage,
+}: {
+  message: ChatMessage;
+  onOpenWikiPage: (path: string) => void;
+}) {
   const isUser = message.role === "user";
   const activeTools = message.tools.filter((t) => t.status === "start");
 
@@ -83,7 +98,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         }`}
       >
         <div className="whitespace-pre-wrap break-words">
-          {message.text}
+          <MessageText text={message.text} onOpenWikiPage={onOpenWikiPage} />
           {!message.finished && message.role === "assistant" && (
             <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-current" />
           )}
@@ -96,4 +111,45 @@ function MessageBubble({ message }: { message: ChatMessage }) {
       </div>
     </div>
   );
+}
+
+function MessageText({
+  text,
+  onOpenWikiPage,
+}: {
+  text: string;
+  onOpenWikiPage: (path: string) => void;
+}) {
+  const mentions = findWikiPageMentions(text);
+  if (mentions.length === 0) {
+    return text;
+  }
+
+  const parts: ReactNode[] = [];
+  let cursor = 0;
+
+  for (const mention of mentions) {
+    if (cursor < mention.start) {
+      parts.push(text.slice(cursor, mention.start));
+    }
+
+    parts.push(
+      <button
+        key={`${mention.start}-${mention.text}`}
+        type="button"
+        className="text-left align-baseline underline underline-offset-2"
+        onClick={() => onOpenWikiPage(mention.path)}
+      >
+        {mention.text}
+      </button>,
+    );
+
+    cursor = mention.end;
+  }
+
+  if (cursor < text.length) {
+    parts.push(text.slice(cursor));
+  }
+
+  return parts;
 }
