@@ -68,33 +68,63 @@ app/
 ### Browser ↔ Bun Server
 
 **WebSocket** (`/ws`) — single persistent connection per session:
-- **Client → Server**: user chat messages, abort requests
-- **Server → Client**: streamed Pi Agent events (`text_delta`, `message_update`, `agent_end`, etc.)
+- **Client → Server**: user chat messages, abort requests, ping
+- **Server → Client**: stable app-level events (see below), not raw Pi RPC events
+
+The server maps Pi RPC events to a stable app event protocol, decoupling the UI from the Pi Agent internals:
+
+```ts
+// Client → Server
+type ClientMessage =
+  | { type: "prompt"; text: string }
+  | { type: "abort" }
+  | { type: "ping" };
+
+// Server → Client
+type ServerMessage =
+  | { type: "run_started"; runId: string }
+  | { type: "assistant_delta"; runId: string; text: string }
+  | { type: "tool_status"; runId: string; tool: string; status: "start" | "end" }
+  | { type: "run_finished"; runId: string }
+  | { type: "repo_changed" }
+  | { type: "error"; code: string; message: string }
+  | { type: "pong" };
+```
 
 **REST** (`/api/*`) — stateless reads for repo data:
-- `GET /api/config` — `.apara.yaml` contents
-- `GET /api/wiki` — wiki index / page listing
-- `GET /api/wiki/:path` — individual wiki page content
-- `GET /api/sources` — raw/ file listing
-- `GET /api/sources/:path` — raw source content
-- `GET /api/log` — wiki/log.md parsed entries
+- `GET /api/config` — sanitized config (name, wikiDir, rawDir, model); does not expose raw `.apara.yaml`
+- `GET /api/wiki` — wiki page listing (directory scan + frontmatter parse)
+- `GET /api/wiki?path=concepts/foo.md` — individual wiki page content (query param, not path segment, to support nested paths)
+- `GET /api/sources` — raw/ file listing with metadata (name, size, type)
+- `GET /api/sources?path=books/bar.pdf` — source content: text preview for text files (with size limit), metadata-only response for binary files
+- `GET /api/log` — raw `wiki/log.md` content (structured parsing deferred to a later task)
+
+All file-path parameters are resolved against the repo root and boundary-checked — any path that resolves outside the repo root returns `403`.
 
 ### Bun Server ↔ Pi Agent
 
 - Uses the existing `PiRpcClient` — moves from `app/src/lib/` to `app/server/lib/` since it uses Node/Bun APIs (`child_process`, `EventEmitter`) and is server-only code. The `rpc-types.ts` stays shared in `app/src/lib/` since both server and client reference the event types.
 - Bun spawns one Pi Agent subprocess per session
 - RPC client forwards WebSocket messages as `RpcCommand` objects to Pi stdin
-- RPC client emits `RpcEvent` objects back, which Bun forwards over the WebSocket to the browser
+- RPC client receives `RpcEvent` objects, maps them to `ServerMessage`, and forwards over WebSocket
+
+### Session lifecycle
+
+- **One session = one WebSocket connection.** Single-user system; only one active session at a time.
+- **One active prompt at a time.** A second `prompt` message while one is running returns an error.
+- **Reconnect:** On WebSocket close, the Pi subprocess is killed after a short grace period (5s). A new connection spawns a fresh subprocess. No session resume in v1.
+- **Heartbeat:** Client sends `ping` every 30s. Server responds with `pong`. If no ping is received for 60s, server closes the connection and cleans up the subprocess.
+- **Cleanup:** On server shutdown or unexpected disconnect, all child processes are killed via process group signal.
 
 ### Chat message flow
 
 ```
 User types message
-  → Browser sends JSON over WebSocket
+  → Browser sends { type: "prompt", text } over WebSocket
     → Bun receives, calls piClient.prompt(message)
       → Pi Agent processes via LLM
       → Pi Agent emits text_delta events on stdout
-    → Bun forwards each event over WebSocket
+    → Bun maps to { type: "assistant_delta", ... } and forwards over WebSocket
   → Browser renders streaming text in chat panel
 ```
 
@@ -135,8 +165,12 @@ Two-panel, chat-centric layout:
 Simple token-based auth, enabled by environment variable:
 
 - If `APARA_AUTH_TOKEN` is set, auth is required. If unset, no auth (local mode).
-- **Login**: Single page with a token input field. Submits to `POST /api/auth` which sets an HTTP-only cookie.
+- **Login**: Single page with a token input field. Submits to `POST /api/auth` which sets a cookie.
+- **Cookie flags**: `HttpOnly`, `SameSite=Strict`, `Secure` when served over HTTPS.
+- **Origin validation**: `POST /api/auth` and WebSocket upgrade requests must have a valid `Origin` header matching the server's host. Reject cross-origin requests.
 - **Protection**: All `/api/*` routes and the WebSocket upgrade check the cookie. Unauthorized requests get `401`.
+- **Local mode**: When auth is disabled (no `APARA_AUTH_TOKEN`), the server binds to `127.0.0.1` only, not `0.0.0.0`, to prevent LAN exposure.
+- **Rate limiting**: Simple delay (1s) after failed login attempts to discourage brute-force.
 - **No user accounts**: Single-user system. One token = one user. No signup, no password reset, no sessions table.
 
 ## Configuration
@@ -145,7 +179,8 @@ Simple token-based auth, enabled by environment variable:
 
 - **CLI arg** (primary): `bun run server --repo /path/to/knowledge-repo`
 - **Env var** (fallback): `APARA_REPO_PATH=/path/to/knowledge-repo`
-- **Default**: current working directory
+- **No default**: if neither is provided, the server exits with an error message explaining how to set the repo path. (The app repo is separate from the knowledge repo, so `cwd` is almost never correct.)
+- **Validation on startup**: the resolved path must contain `.apara.yaml` or a valid `wiki/` + `raw/` structure. If not, the server exits with a descriptive error.
 
 The server reads `.apara.yaml` from the repo path to get `wiki_dir`, `raw_dir`, model preference, and extension path.
 
