@@ -19,17 +19,21 @@ export function appendToIndex(
 }
 
 export function isIngested(wikiDir: string, sourcePath: string): boolean {
-  const summariesDir = join(wikiDir, "summaries");
-  if (!existsSync(summariesDir)) return false;
+  const subdirs = ["entities", "concepts", "summaries", "synthesis"];
 
-  const files = readdirSync(summariesDir).filter((f) => f.endsWith(".md"));
-  for (const file of files) {
-    const content = readFileSync(join(summariesDir, file), "utf-8");
-    try {
-      const page = parseFrontmatter(content);
-      if (page.sources.includes(sourcePath)) return true;
-    } catch {
-      continue;
+  for (const subdir of subdirs) {
+    const pageDir = join(wikiDir, subdir);
+    if (!existsSync(pageDir)) continue;
+
+    const files = readdirSync(pageDir).filter((f) => f.endsWith(".md"));
+    for (const file of files) {
+      const content = readFileSync(join(pageDir, file), "utf-8");
+      try {
+        const page = parseFrontmatter(content);
+        if (page.sources.includes(sourcePath)) return true;
+      } catch {
+        continue;
+      }
     }
   }
   return false;

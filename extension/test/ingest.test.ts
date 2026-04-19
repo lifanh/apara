@@ -47,5 +47,14 @@ describe("ingest helpers", () => {
       );
       expect(isIngested(join(tempDir, "wiki"), "rust/ch1.md")).toBe(true);
     });
+
+    it("returns true for a source referenced in an entity page", () => {
+      mkdirSync(join(tempDir, "wiki/entities"), { recursive: true });
+      writeFileSync(
+        join(tempDir, "wiki/entities/typescript.md"),
+        '---\ntitle: "TypeScript"\ntype: entity\nsources:\n  - books/sample-book.md\ncreated: 2026-04-10\nupdated: 2026-04-10\nlinks: []\n---\n\nEntity content.\n'
+      );
+      expect(isIngested(join(tempDir, "wiki"), "books/sample-book.md")).toBe(true);
+    });
   });
 });
