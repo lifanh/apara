@@ -1,0 +1,33 @@
+{
+  "milestone": "agents-md",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && npx vitest run && cd /Users/lifan/dev/ai/apara/extension && npx vitest run",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.app.json && bunx tsc --noEmit -p tsconfig.server.json",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && npx oxlint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [],
+  "rejectedObservations": [],
+  "previousRound": null
+}

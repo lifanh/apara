@@ -1,0 +1,15 @@
+{
+  "featureId": "agents-md-template",
+  "reviewedAt": "2026-04-19T15:20:15Z",
+  "commitId": "b7a8c8d",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Implementation fully matches the feature contract: AGENTS template was added with the required heading and six sections, initRepo now scaffolds AGENTS.md without overwriting existing files, and repo tests cover creation, no-overwrite behavior, section presence, and WikiPage frontmatter fields.",
+    "issues": []
+  },
+  "sharedStateObservations": [],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed handoff, transcript skeleton, and commit b7a8c8d. No blocking or non-blocking defects were found; requirements and expected behavior for agents-md-template are satisfied."
+}
