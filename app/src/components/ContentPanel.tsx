@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dashboard } from "@/components/Dashboard";
 import { SourceManager } from "@/components/SourceManager";
+import { Timeline } from "@/components/Timeline";
 import { WikiBrowser } from "@/components/WikiBrowser";
 
 interface ContentPanelProps {
@@ -38,8 +39,8 @@ export function ContentPanel({
       <TabsContent value="sources" className="flex-1 overflow-hidden">
         <SourceManager setChatInput={setChatInput} />
       </TabsContent>
-      <TabsContent value="timeline" className="flex-1 p-4">
-        <p className="text-muted-foreground">Timeline — coming soon</p>
+      <TabsContent value="timeline" className="flex-1 overflow-hidden">
+        <Timeline onOpenWikiPage={onOpenWikiPage} onTabChange={onTabChange} />
       </TabsContent>
     </Tabs>
   );
