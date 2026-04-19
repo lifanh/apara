@@ -1,0 +1,37 @@
+{
+  "milestone": "panel-wiring",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 0,
+    "blocked": 1
+  },
+  "passedAssertions": [
+    "VAL-WIRE-001",
+    "VAL-WIRE-002",
+    "VAL-WIRE-004",
+    "VAL-CROSS-001",
+    "VAL-CROSS-002"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [
+    {
+      "id": "VAL-WIRE-003",
+      "blockedBy": "Could not obtain an assistant response containing a wiki-path mention to click. Mission guidance states Pi Agent CLI is unavailable in this environment."
+    }
+  ],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Documented panel-wiring chat-mention blocking procedure and chat connection wait guidance for chat pre-fill assertions.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null,
+  "generatedAt": "2026-04-19T14:47:29.337899+00:00",
+  "orchestratorOverride": {
+    "action": "Deferred VAL-WIRE-003 to misc-polish milestone. Assertion tests pre-existing MessageText functionality (ChatPanel.tsx) which requires Pi Agent CLI to generate assistant messages with wiki paths. Pi Agent is unavailable in test environment. The code (findWikiPageMentions + clickable button rendering) is confirmed working from prior commits. Assertion will be re-tested when Pi Agent becomes available."
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "groupId": "panel-wiring-ui",
+  "testedAt": "2026-04-19T14:45:53Z",
+  "milestone": "panel-wiring",
+  "isolation": {
+    "missionDir": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:3000",
+    "testRepoPath": "/tmp/apara-test-panel-wiring",
+    "browserSession": "panel-wiring-ui"
+  },
+  "toolsUsed": [
+    "agent-browser"
+  ],
+  "assertionResults": [
+    {
+      "id": "VAL-WIRE-001",
+      "title": "Dashboard pending inbox item pre-fills chat",
+      "status": "pass",
+      "reason": "Clicking pending item 'rust-intro.md' replaced existing draft text and set chat input to 'ingest rust-intro.md' while Dashboard tab stayed selected.",
+      "evidence": {
+        "screenshots": [
+          "panel-wiring/panel-wiring-ui/VAL-WIRE-001-dashboard-pending-prefill.png"
+        ],
+        "consoleErrors": "none"
+      }
+    },
+    {
+      "id": "VAL-WIRE-002",
+      "title": "Dashboard active page navigates to Wiki Browser",
+      "status": "pass",
+      "reason": "Clicking 'TypeScript entity · 1 links' switched to Wiki tab and loaded entities/typescript.md with TypeScript page content visible.",
+      "evidence": {
+        "screenshots": [
+          "panel-wiring/panel-wiring-ui/VAL-WIRE-002-dashboard-active-to-wiki.png"
+        ],
+        "consoleErrors": "none"
+      }
+    },
+    {
+      "id": "VAL-WIRE-003",
+      "title": "Chat wiki mention navigates to Wiki Browser",
+      "status": "blocked",
+      "reason": "Could not obtain an assistant response containing a wiki-path mention to click. Mission guidance states Pi Agent CLI is unavailable in this environment.",
+      "evidence": {
+        "screenshots": [
+          "panel-wiring/panel-wiring-ui/VAL-WIRE-003-chat-mention-attempt.png"
+        ],
+        "consoleErrors": "none"
+      }
+    },
+    {
+      "id": "VAL-WIRE-004",
+      "title": "Chat pre-fill does not auto-send",
+      "status": "pass",
+      "reason": "After Dashboard pending click, input became 'ingest articles/ai-safety.md' while chat remained in initial empty state prompt with no new message entries and no captured websocket/network activity.",
+      "evidence": {
+        "screenshots": [
+          "panel-wiring/panel-wiring-ui/VAL-WIRE-004-prefill-no-autosend.png"
+        ],
+        "consoleErrors": "none",
+        "network": "No requests captured after clearing request log during pre-fill check"
+      }
+    },
+    {
+      "id": "VAL-CROSS-001",
+      "title": "Tab switching does not break components",
+      "status": "pass",
+      "reason": "Completed Dashboard → Wiki → Sources → Timeline → Dashboard round-trip; each tab rendered expected content without broken layout or error states.",
+      "evidence": {
+        "screenshots": [
+          "panel-wiring/panel-wiring-ui/VAL-CROSS-001-initial-dashboard.png",
+          "panel-wiring/panel-wiring-ui/VAL-CROSS-001-after-roundtrip.png"
+        ],
+        "consoleErrors": "none"
+      }
+    },
+    {
+      "id": "VAL-CROSS-002",
+      "title": "Source Manager to Chat to Wiki flow",
+      "status": "pass",
+      "reason": "Clicking pending source in Sources set input to 'ingest rust-intro.md'; after switching to Dashboard and back to Sources, input still contained 'ingest rust-intro.md'.",
+      "evidence": {
+        "screenshots": [
+          "panel-wiring/panel-wiring-ui/VAL-CROSS-002-after-source-prefill.png",
+          "panel-wiring/panel-wiring-ui/VAL-CROSS-002-after-tab-switch-back.png"
+        ],
+        "consoleErrors": "none",
+        "network": "GET /api/sources?path=rust-intro.md observed during source selection"
+      }
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Chat input initially rendered as disabled 'Connecting…' before becoming interactive.",
+      "resolved": true,
+      "resolution": "Waited for connection state to settle before executing pre-fill checks.",
+      "affectedAssertions": [
+        "VAL-WIRE-001",
+        "VAL-WIRE-004",
+        "VAL-CROSS-002"
+      ]
+    },
+    {
+      "description": "Text-based locator for source item intermittently failed on nested button text.",
+      "resolved": true,
+      "resolution": "Used snapshot refs (e11 etc.) for deterministic clicks.",
+      "affectedAssertions": [
+        "VAL-CROSS-002"
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Pi Agent CLI unavailable in mission environment, preventing validation of assistant-generated wiki mention link behavior.",
+      "affectedAssertions": [
+        "VAL-WIRE-003"
+      ],
+      "quickFixAttempted": "Sent chat prompt manually and waited for response; only user message appeared, no assistant mention/link rendered."
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 0,
+    "blocked": 1,
+    "skipped": 0
+  }
+}
