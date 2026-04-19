@@ -1,0 +1,47 @@
+{
+  "milestone": "source-manager",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && npx vitest run && cd /Users/lifan/dev/ai/apara/extension && npx vitest run",
+      "exitCode": 0
+    },
+    "typecheck": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.app.json && bunx tsc --noEmit -p tsconfig.server.json",
+      "exitCode": 0
+    },
+    "lint": {
+      "passed": true,
+      "command": "cd /Users/lifan/dev/ai/apara/app && npx oxlint",
+      "exitCode": 0
+    }
+  },
+  "reviewsSummary": {
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "nonBlockingIssues": [
+    {
+      "featureId": "source-manager-view",
+      "severity": "non_blocking",
+      "description": "Upload handling reads each file into memory with `await file.arrayBuffer()` and has no explicit size guard, which can increase memory-pressure risk on very large uploads."
+    }
+  ],
+  "appliedUpdates": [],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "skill:app-worker",
+      "suggestion": "Update typecheck guidance to use app workspace commands (`cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.app.json && bunx tsc --noEmit -p tsconfig.server.json`) instead of root-level `npx tsc`.",
+      "evidence": "Reviewer observation cites mismatch between `.factory/skills/app-worker/SKILL.md` and `.factory/services.yaml`, and this mismatch was also previously observed in worker handoff.",
+      "isSystemic": true
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}

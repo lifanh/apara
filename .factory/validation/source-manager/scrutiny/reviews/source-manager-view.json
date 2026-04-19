@@ -1,0 +1,28 @@
+{
+  "featureId": "source-manager-view",
+  "reviewedAt": "2026-04-19T13:32:29Z",
+  "commitId": "6495e1f",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "The feature implementation matches the described scope: Sources tab wiring, recursive tree UI, ingestion indicators, pending-click chat prefill, preview panel, empty state, and multipart upload endpoint with safePath checks. No blocking correctness or regression issues were found in the reviewed commit.",
+    "issues": [
+      {
+        "file": "app/server/index.ts",
+        "line": 208,
+        "severity": "non_blocking",
+        "description": "The upload path reads each file fully into memory (`await file.arrayBuffer()`) with no explicit size guard. Large uploads can cause avoidable memory pressure/DoS on the Bun server."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "skills",
+      "observation": "The `app-worker` skill still documents root-level `npx tsc` commands, but this workspace requires `bunx tsc` from `app/` (as reflected in services.yaml).",
+      "evidence": ".factory/skills/app-worker/SKILL.md:68 and :105 use `cd /Users/lifan/dev/ai/apara && npx tsc ...`; .factory/services.yaml:7 uses `cd /Users/lifan/dev/ai/apara/app && bunx tsc ...`; handoff discovered issue also records the npx failure in this feature run."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed transcript skeleton, handoff, skill doc, and commit 6495e1f diff for `source-manager-view`. Feature requirements are met with no blocking defects; one non-blocking upload memory-risk note and one shared-state skill-doc mismatch observation were recorded."
+}
