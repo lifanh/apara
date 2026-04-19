@@ -4,7 +4,7 @@ commands:
   test:ext: cd /Users/lifan/dev/ai/apara/extension && npx vitest run
   test: cd /Users/lifan/dev/ai/apara/app && npx vitest run && cd /Users/lifan/dev/ai/apara/extension && npx vitest run
   lint: cd /Users/lifan/dev/ai/apara/app && npx oxlint
-  typecheck: cd /Users/lifan/dev/ai/apara && npx tsc --noEmit -p app/tsconfig.app.json && npx tsc --noEmit -p app/tsconfig.server.json
+  typecheck: cd /Users/lifan/dev/ai/apara/app && bunx tsc --noEmit -p tsconfig.app.json && bunx tsc --noEmit -p tsconfig.server.json
 
 services:
   backend:
