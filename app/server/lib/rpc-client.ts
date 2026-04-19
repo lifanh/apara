@@ -1,7 +1,11 @@
 import { spawn, type ChildProcess } from "child_process";
 import { EventEmitter } from "events";
 import { StringDecoder } from "string_decoder";
-import type { RpcCommand, RpcEvent, RpcResponse } from "./rpc-types.js";
+import type {
+  RpcCommand,
+  RpcEvent,
+  RpcResponse,
+} from "../../src/lib/rpc-types.js";
 
 export interface PiRpcClientOptions {
   cwd: string;

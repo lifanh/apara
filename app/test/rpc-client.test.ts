@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { ChildProcess, spawn } from "child_process";
-import { PiRpcClient } from "../src/lib/rpc-client.js";
+import { PiRpcClient } from "../server/lib/rpc-client.js";
 import type { RpcEvent } from "../src/lib/rpc-types.js";
 
 describe("PiRpcClient", () => {
