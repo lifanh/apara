@@ -25,14 +25,14 @@
 | 3 | Task 10: Web App Scaffold | ✅ Done | `52f9d74`..`5a9dfcd` |
 | 3 | Task 11: Chat Panel — Pi Agent Integration | ✅ Done | `63362a2`..latest |
 | 3 | Task 12: Dashboard View | ✅ Done | latest |
-| 3 | Task 13: Wiki Browser View | ⬜ Pending | — |
-| 3 | Task 14: Source Manager View | ⬜ Pending | — |
-| 3 | Task 15: Timeline View | ⬜ Pending | — |
-| 4 | Task 16: Chat ↔ Panel Wiring | ⬜ Pending | — |
-| 4 | Task 17: Git Sync UI | ⬜ Pending | — |
-| 4 | Task 18: AGENTS.md Schema File | ⬜ Pending | — |
+| 3 | Task 13: Wiki Browser View | ✅ Done | `a447cbd` |
+| 3 | Task 14: Source Manager View | ✅ Done | `6495e1f` |
+| 3 | Task 15: Timeline View | ✅ Done | `3c59068` |
+| 4 | Task 16: Chat ↔ Panel Wiring | ✅ Done | `7e0bcab` |
+| 4 | Task 17: Git Sync UI | ✅ Done | `95b8255` |
+| 4 | Task 18: AGENTS.md Schema File | ✅ Done | `bb44e2e` |
 
-**Current state:** Phases 1, 2, and Tasks 10–12 of Phase 3 complete. Dashboard view shows stats bar (wiki pages, sources, pending count), pending inbox, active pages sorted by link count, and recent activity feed — all fetched from `/api/dashboard`. Next: Tasks 13–15 (wiki browser, source manager, timeline views).
+**Current state:** All phases complete. The full APARA web app is functional with all four views (Dashboard, Wiki Browser, Source Manager, Timeline), cross-panel wiring, Git Sync UI, and AGENTS.md schema template.
 
 ---
 
