@@ -1,0 +1,26 @@
+{
+  "milestone": "misc-polish",
+  "assertions": [
+    {
+      "id": "VAL-WIRE-003",
+      "status": "blocked",
+      "reason": "Blocked on assistant output: after sending a prompt without any wiki path text (\"Which wiki page should I open for TypeScript?\") and waiting 8s, no assistant message was rendered, so the contract requirement (assistant message containing wiki page path) could not be exercised.",
+      "evidence": [
+        "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/misc-polish/flow-wire-003/VAL-WIRE-003-no-assistant-response.png",
+        "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/misc-polish/flow-wire-003/VAL-WIRE-003-body-text-no-assistant.txt",
+        "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/misc-polish/flow-wire-003/VAL-WIRE-003-console-errors.txt",
+        "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/misc-polish/flow-wire-003/VAL-WIRE-003-network-requests.txt"
+      ]
+    }
+  ],
+  "toolsUsed": [
+    "agent-browser"
+  ],
+  "frictions": [
+    "agent-browser network capture listed page/API requests but did not surface chat transport details (likely websocket), so assistant-output absence was validated via rendered UI evidence instead."
+  ],
+  "blockers": [
+    "Pi Agent assistant output unavailable in this environment; without an assistant message, VAL-WIRE-003 cannot be fully executed per contract."
+  ],
+  "notes": "VAL-WIRE-003 is blocked due to missing assistant response; clickable wiki-link behavior for assistant messages could not be validated end-to-end."
+}

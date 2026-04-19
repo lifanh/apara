@@ -1,0 +1,21 @@
+{
+  "milestone": "misc-polish",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 0,
+    "blocked": 1
+  },
+  "passedAssertions": [],
+  "failedAssertions": [],
+  "blockedAssertions": [
+    {
+      "id": "VAL-WIRE-003",
+      "blockedBy": "Pi Agent assistant output unavailable in this environment, so no assistant message containing wiki path could be produced for click-through validation."
+    }
+  ],
+  "appliedUpdates": [],
+  "previousRound": null
+}
