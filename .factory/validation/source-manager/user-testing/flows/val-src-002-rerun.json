@@ -1,0 +1,52 @@
+{
+  "testedAt": "2026-04-19T13:54:44Z",
+  "assertionResults": [
+    {
+      "id": "VAL-SRC-002",
+      "status": "pass",
+      "reason": "Each source file in the Sources tree shows exactly one indicator matching ingested state derived from wiki frontmatter references. books/sample-book.md is shown as ingested and is referenced in wiki/entities/typescript.md frontmatter sources; articles/ai-safety.md and rust-intro.md are shown pending and are absent from wiki sources references."
+    }
+  ],
+  "toolsUsed": [
+    "agent-browser",
+    "curl"
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser network requests output returned \"No requests captured\" in this run.",
+      "resolved": true,
+      "resolution": "Captured required /api/sources and /api/dashboard network evidence directly via curl against the assigned local API.",
+      "affectedAssertions": [
+        "VAL-SRC-002"
+      ]
+    }
+  ],
+  "blockers": [],
+  "evidence": {
+    "paths": {
+      "screenshot": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/VAL-SRC-002-sources-status.png",
+      "uiSnapshot": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/VAL-SRC-002-snapshot.txt",
+      "consoleErrors": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/VAL-SRC-002-console-errors.txt",
+      "apiSourcesHeaders": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/api-sources.headers.txt",
+      "apiSourcesBody": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/api-sources.body.json",
+      "apiDashboardHeaders": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/api-dashboard.headers.txt",
+      "apiDashboardBody": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8/evidence/source-manager/val-src-002-rerun/api-dashboard.body.json",
+      "frontmatterReference": "/tmp/apara-test-repo-source-manager-r2/wiki/entities/typescript.md"
+    },
+    "notes": [
+      "UI snapshot includes: ai-safety.md pending, sample-book.md ingested, rust-intro.md pending.",
+      "Console errors file is empty (no console errors reported).",
+      "GET /api/sources returned HTTP 200 with source tree entries under raw/.",
+      "GET /api/dashboard returned HTTP 200 with pending=[articles/ai-safety.md,rust-intro.md], confirming books/sample-book.md is ingested.",
+      "wiki/entities/typescript.md frontmatter sources includes books/sample-book.md, matching ingested indicator in UI."
+    ]
+  },
+  "reproductionSteps": [
+    "Open http://localhost:5173 in agent-browser session valsrc002rerun.",
+    "Navigate to Sources tab and observe per-file status indicators in the source tree.",
+    "Confirm sample-book.md displays ingested while ai-safety.md and rust-intro.md display pending.",
+    "Verify ingested ground truth from /tmp/apara-test-repo-source-manager-r2/wiki/entities/typescript.md frontmatter sources.",
+    "Capture API evidence via GET http://localhost:3000/api/sources and GET http://localhost:3000/api/dashboard (both HTTP 200).",
+    "Check console errors and capture screenshot evidence."
+  ]
+}

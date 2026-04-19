@@ -1,0 +1,39 @@
+{
+  "milestone": "source-manager",
+  "round": 1,
+  "status": "fail",
+  "assertionsSummary": {
+    "total": 7,
+    "passed": 6,
+    "failed": 1,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-SRC-001",
+    "VAL-SRC-003",
+    "VAL-SRC-004",
+    "VAL-SRC-005",
+    "VAL-SRC-006",
+    "VAL-SRC-007"
+  ],
+  "failedAssertions": [
+    {
+      "id": "VAL-SRC-002",
+      "reason": "books/sample-book.md is shown as pending in Sources, but wiki/entities/typescript.md frontmatter lists sources: [books/sample-book.md], so the ingestion indicator is incorrect."
+    }
+  ],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added Flow Validator Guidance for agent-browser with explicit single-run isolation boundaries for source-manager assertions.",
+      "source": "setup"
+    },
+    {
+      "target": "user-testing.md",
+      "description": "Documented fallback to Source Manager file input when OS-level drag gestures are unavailable in headless runs, while preserving upload verification requirements.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null
+}

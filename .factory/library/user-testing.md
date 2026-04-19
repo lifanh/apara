@@ -53,3 +53,4 @@
 - For source-manager assertions, run serially within one browser context to avoid shared-state collisions (uploads, empty-directory checks, tree refreshes).
 - In headless runs, if OS-level drag gestures are unavailable, validate upload assertions through the Source Manager file input while still verifying `POST /api/sources/upload`, tree update, and on-disk file creation.
 - Capture required evidence for each assertion: screenshots plus specified network/console artifacts.
+- If agent-browser network capture returns no requests, collect required endpoint evidence with `curl` (headers + response body) and store it in the assertion evidence directory.
