@@ -1,0 +1,113 @@
+{
+  "groupId": "timeline-ui",
+  "milestone": "timeline",
+  "tool": "agent-browser",
+  "toolsUsed": ["agent-browser", "curl"],
+  "testedAt": "2026-04-19T14:25:20Z",
+  "isolation": {
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:3000",
+    "testRepoPath": "/tmp/apara-test-repo-timeline-4ebfed88",
+    "browserSession": "timeline-ui-5425a29a"
+  },
+  "assertionResults": [
+    {
+      "id": "VAL-TL-001",
+      "status": "pass",
+      "reason": "Timeline tab rendered parsed entries with date/action/detail structure from /api/log.",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-001-timeline-rendered.png",
+        "timeline/timeline-ui/VAL-TL-001-timeline-snapshot.txt",
+        "timeline/timeline-ui/VAL-TL-001-network-api-log-curl.txt",
+        "timeline/timeline-ui/VAL-TL-001-console-errors.txt"
+      ]
+    },
+    {
+      "id": "VAL-TL-002",
+      "status": "pass",
+      "reason": "Different action types render with distinct visual/icon labels (ingest, query, lint).",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-002-action-icons.png",
+        "timeline/timeline-ui/VAL-TL-007-order-full-snapshot.txt"
+      ]
+    },
+    {
+      "id": "VAL-TL-003",
+      "status": "pass",
+      "reason": "Filter buttons correctly restricted entries by action type, and All restored the complete list.",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-003-filter-ingest.png",
+        "timeline/timeline-ui/VAL-TL-003-filter-query.png",
+        "timeline/timeline-ui/VAL-TL-003-filter-lint.png",
+        "timeline/timeline-ui/VAL-TL-003-filter-all.png",
+        "timeline/timeline-ui/VAL-TL-003-filter-ingest-snapshot.txt",
+        "timeline/timeline-ui/VAL-TL-003-filter-query-snapshot.txt",
+        "timeline/timeline-ui/VAL-TL-003-filter-lint-snapshot.txt",
+        "timeline/timeline-ui/VAL-TL-003-filter-all-snapshot.txt"
+      ]
+    },
+    {
+      "id": "VAL-TL-004",
+      "status": "pass",
+      "reason": "Search input reduced visible entries to matching text and clearing restored all entries.",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-004-search-filtered.png",
+        "timeline/timeline-ui/VAL-TL-004-search-cleared.png",
+        "timeline/timeline-ui/VAL-TL-004-search-filtered-snapshot.txt",
+        "timeline/timeline-ui/VAL-TL-004-search-cleared-snapshot.txt"
+      ]
+    },
+    {
+      "id": "VAL-TL-005",
+      "status": "pass",
+      "reason": "Clicking a timeline entry referencing a wiki path navigated to the Wiki tab and loaded the referenced page.",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-005-before-wiki-entry-click.png",
+        "timeline/timeline-ui/VAL-TL-005-after-wiki-entry-click.png",
+        "timeline/timeline-ui/VAL-TL-005-after-wiki-entry-click-snapshot.txt"
+      ]
+    },
+    {
+      "id": "VAL-TL-006",
+      "status": "pass",
+      "reason": "With wiki/log.md emptied, Timeline showed a meaningful empty-state message and remained stable.",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-006-empty-log-state.png",
+        "timeline/timeline-ui/VAL-TL-006-empty-log-full-snapshot.txt",
+        "timeline/timeline-ui/VAL-TL-006-console-errors.txt"
+      ]
+    },
+    {
+      "id": "VAL-TL-007",
+      "status": "pass",
+      "reason": "Entries displayed in descending date order (2026-04-12, 2026-04-11, 2026-04-10, 2026-04-10).",
+      "evidence": [
+        "timeline/timeline-ui/VAL-TL-007-reverse-chronological-order.png",
+        "timeline/timeline-ui/VAL-TL-007-order-full-snapshot.txt"
+      ]
+    }
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser network capture returned 'No requests captured' for /api/log in this run.",
+      "resolved": true,
+      "resolution": "Collected endpoint evidence using curl with headers/body to local API.",
+      "affectedAssertions": ["VAL-TL-001"]
+    },
+    {
+      "description": "Baseline fixture log had no wiki-path timeline entry for click-to-Wiki validation.",
+      "resolved": true,
+      "resolution": "Temporarily appended a wiki-path query entry for VAL-TL-005, validated navigation, then restored log from backup.",
+      "affectedAssertions": ["VAL-TL-005"]
+    }
+  ],
+  "blockers": [],
+  "summary": {
+    "total": 7,
+    "pass": 7,
+    "fail": 0,
+    "blocked": 0,
+    "skipped": 0,
+    "text": "Tested 7 timeline assertions: 7 passed, 0 failed, 0 blocked."
+  }
+}

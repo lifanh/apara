@@ -32,6 +32,7 @@
 - Pi Agent (`pi` CLI) is NOT available in the test environment — assertions requiring actual Pi Agent responses cannot be fully tested
 - WebSocket chat connects but Pi Agent subprocess won't spawn without `pi` binary
 - Focus validation on UI rendering, interaction, and API integration
+- For timeline validation `VAL-TL-005`, the default fixture may not include a wiki-page path entry in `wiki/log.md`; append a temporary entry like `## [2026-04-13] query | entities/typescript.md` for navigation validation, then restore the original log.
 
 ## Validation Concurrency
 

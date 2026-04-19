@@ -1,0 +1,31 @@
+{
+  "milestone": "timeline",
+  "round": 1,
+  "status": "pass",
+  "assertionsSummary": {
+    "total": 7,
+    "passed": 7,
+    "failed": 0,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-TL-001",
+    "VAL-TL-002",
+    "VAL-TL-003",
+    "VAL-TL-004",
+    "VAL-TL-005",
+    "VAL-TL-006",
+    "VAL-TL-007"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added a timeline-specific fixture note for VAL-TL-005 (temporary wiki-path log entry and restore).",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null,
+  "generatedAt": "2026-04-19T14:26:40.583775Z"
+}
