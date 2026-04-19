@@ -10,8 +10,13 @@
     "@sinclair/typebox": "^0.34.0",
     "yaml": "^2.0.0"
   },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "oxlint"
+  },
   "devDependencies": {
     "@mariozechner/pi-coding-agent": "latest",
+    "oxlint": "^0.6.0",
     "typescript": "^5.5.0",
     "vitest": "^3.0.0"
   }

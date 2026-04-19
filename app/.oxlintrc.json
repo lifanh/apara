@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "eslint": {
+      "no-unused-vars": "warn",
+      "no-undef": "warn"
+    },
+    "react": {
+      "react-in-jsx-scope": "off"
+    }
+  },
+  "settings": {
+    "jsx-a11y": {
+      "components": {
+        "Button": "button",
+        "Link": "a"
+      }
+    }
+  }
+}
