@@ -16,7 +16,7 @@ const LOG_ENTRY_PATTERN = /^## \[(\d{4}-\d{2}-\d{2})\]\s+([a-z]+)\s*\|\s*(.+)$/g
 const WIKI_PATH_PATTERN =
   /\b(?:wiki\/)?(entities|concepts|summaries|synthesis)\/[A-Za-z0-9._/-]+\.md\b/i;
 const SOURCE_PATH_PATTERN =
-  /\b(?:raw\/)?([A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*\.[A-Za-z0-9._-]+)\b/;
+  /\b(?:raw\/)?([A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)+\.(?:md|txt|yaml|json|csv|tsv))\b/i;
 
 export function parseTimelineEntries(rawLog: string): TimelineEntry[] {
   const entries: Array<TimelineEntry & { order: number }> = [];

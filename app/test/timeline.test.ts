@@ -50,6 +50,13 @@ describe("timeline utilities", () => {
       type: "source",
       path: "articles/ai-safety.md",
     });
+    expect(resolveTimelineNavigation("Ingested books/sample-book.md")).toEqual({
+      type: "source",
+      path: "books/sample-book.md",
+    });
+    expect(resolveTimelineNavigation("Node.js runtime notes")).toBeNull();
+    expect(resolveTimelineNavigation("Migrated to v2.0")).toBeNull();
+    expect(resolveTimelineNavigation("Opened src/index.ts for review")).toBeNull();
     expect(resolveTimelineNavigation("0 structural issues, 2 uningested")).toBeNull();
   });
 });
