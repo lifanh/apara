@@ -1,0 +1,15 @@
+{
+  "featureId": "panel-wiring",
+  "reviewedAt": "2026-04-19T14:37:24Z",
+  "commitId": "fe0c690e7eb6de55fb612c11fef2bd4eb5691da6",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Implementation matches the feature requirements: Dashboard pending items prefill chat via setChatInput without sending, active pages call openWikiPage for Wiki tab navigation, MessageText-driven chat-to-wiki behavior remains wired through App, and tab panels are kept mounted to preserve UI state across tab switches.",
+    "issues": []
+  },
+  "sharedStateObservations": [],
+  "addressesFailureFrom": null,
+  "summary": "Reviewed feature panel-wiring using feature metadata, worker handoff, transcript skeleton, and commit diff. No actionable defects were found in the implemented scope."
+}
