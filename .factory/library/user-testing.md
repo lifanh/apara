@@ -58,3 +58,14 @@
 - In headless runs, if OS-level drag gestures are unavailable, validate upload assertions through the Source Manager file input while still verifying `POST /api/sources/upload`, tree update, and on-disk file creation.
 - Capture required evidence for each assertion: screenshots plus specified network/console artifacts.
 - If agent-browser network capture returns no requests, collect required endpoint evidence with `curl` (headers + response body) and store it in the assertion evidence directory.
+
+### Surface-specific limits
+- `agent-browser`: max concurrent validators = 5
+- `vitest`: max concurrent validators = 1 (shared working tree and test process contention)
+
+## Flow Validator Guidance: vitest
+
+- Run from repo root using absolute paths and keep execution scoped to milestone assertions.
+- Use extension unit tests as the contract surface for `VAL-AGENT-*` assertions.
+- Do not modify source files or test fixtures while validating.
+- Emit assertion-level status and include command output excerpts in the flow report.

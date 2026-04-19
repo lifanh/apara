@@ -1,0 +1,160 @@
+{
+  "groupId": "agents-md-template",
+  "testedAt": "2026-04-19T15:24:37Z",
+  "isolation": {
+    "surface": "vitest CLI",
+    "workingDirectoryBoundary": "/Users/lifan/dev/ai/apara",
+    "milestone": "agents-md",
+    "missionDir": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8"
+  },
+  "toolsUsed": [
+    "vitest"
+  ],
+  "assertions": [
+    {
+      "id": "VAL-AGENT-001",
+      "title": "Template file exists with correct content",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run extension repo tests covering AGENTS template assertions",
+          "expected": "Template file is readable and contains heading `# APARA Wiki Conventions`",
+          "observed": "Test `repo > AGENTS template > includes all required sections` passed (this test reads `extension/templates/AGENTS.md` and asserts the heading and required sections)."
+        }
+      ],
+      "evidence": {
+        "commands": [
+          {
+            "command": "/Users/lifan/dev/ai/apara/extension/node_modules/.bin/vitest run --reporter=verbose /Users/lifan/dev/ai/apara/extension/test/repo.test.ts",
+            "exitCode": 0
+          }
+        ],
+        "outputSnippets": [
+          "✓ extension/test/repo.test.ts > repo > AGENTS template > includes all required sections",
+          "Test Files 1 passed (1); Tests 9 passed (9)"
+        ],
+        "artifacts": [
+          "agents-md/agents-md-template/vitest-repo-test-verbose.log",
+          "agents-md/agents-md-template/vitest-repo-test-verbose.exitcode",
+          "agents-md/agents-md-template/vitest-repo-test-verbose.tail.txt"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-AGENT-002",
+      "title": "initRepo creates AGENTS.md in repo root",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run initRepo unit tests in extension/test/repo.test.ts",
+          "expected": "`initRepo(repoRoot)` creates `<repoRoot>/AGENTS.md` matching template",
+          "observed": "Test `repo > initRepo > creates AGENTS.md from template` passed."
+        }
+      ],
+      "evidence": {
+        "commands": [
+          {
+            "command": "/Users/lifan/dev/ai/apara/extension/node_modules/.bin/vitest run --reporter=verbose /Users/lifan/dev/ai/apara/extension/test/repo.test.ts",
+            "exitCode": 0
+          }
+        ],
+        "outputSnippets": [
+          "✓ extension/test/repo.test.ts > repo > initRepo > creates AGENTS.md from template"
+        ],
+        "artifacts": [
+          "agents-md/agents-md-template/vitest-repo-test-verbose.log",
+          "agents-md/agents-md-template/vitest-repo-test-verbose.exitcode"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-AGENT-003",
+      "title": "initRepo does not overwrite existing AGENTS.md",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run initRepo overwrite-protection unit test",
+          "expected": "Existing custom AGENTS.md content remains unchanged after initRepo",
+          "observed": "Test `repo > initRepo > does not overwrite existing AGENTS.md` passed."
+        }
+      ],
+      "evidence": {
+        "commands": [
+          {
+            "command": "/Users/lifan/dev/ai/apara/extension/node_modules/.bin/vitest run --reporter=verbose /Users/lifan/dev/ai/apara/extension/test/repo.test.ts",
+            "exitCode": 0
+          }
+        ],
+        "outputSnippets": [
+          "✓ extension/test/repo.test.ts > repo > initRepo > does not overwrite existing AGENTS.md"
+        ],
+        "artifacts": [
+          "agents-md/agents-md-template/vitest-repo-test-verbose.log",
+          "agents-md/agents-md-template/vitest-repo-test-verbose.exitcode"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-AGENT-004",
+      "title": "Template includes all required sections",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run AGENTS template section coverage test",
+          "expected": "Template contains all six required section headings",
+          "observed": "Test `repo > AGENTS template > includes all required sections` passed."
+        }
+      ],
+      "evidence": {
+        "commands": [
+          {
+            "command": "/Users/lifan/dev/ai/apara/extension/node_modules/.bin/vitest run --reporter=verbose /Users/lifan/dev/ai/apara/extension/test/repo.test.ts",
+            "exitCode": 0
+          }
+        ],
+        "outputSnippets": [
+          "✓ extension/test/repo.test.ts > repo > AGENTS template > includes all required sections"
+        ],
+        "artifacts": [
+          "agents-md/agents-md-template/vitest-repo-test-verbose.log",
+          "agents-md/agents-md-template/vitest-repo-test-verbose.exitcode"
+        ]
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-AGENT-005",
+      "title": "Template page format documents WikiPage schema",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Run WikiPage frontmatter field documentation test",
+          "expected": "Template Page Format documents title, type enum, sources, created, updated, links",
+          "observed": "Test `repo > AGENTS template > documents WikiPage frontmatter fields` passed."
+        }
+      ],
+      "evidence": {
+        "commands": [
+          {
+            "command": "/Users/lifan/dev/ai/apara/extension/node_modules/.bin/vitest run --reporter=verbose /Users/lifan/dev/ai/apara/extension/test/repo.test.ts",
+            "exitCode": 0
+          }
+        ],
+        "outputSnippets": [
+          "✓ extension/test/repo.test.ts > repo > AGENTS template > documents WikiPage frontmatter fields"
+        ],
+        "artifacts": [
+          "agents-md/agents-md-template/vitest-repo-test-verbose.log",
+          "agents-md/agents-md-template/vitest-repo-test-verbose.exitcode"
+        ]
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [],
+  "blockers": [],
+  "summary": "Tested 5 assertions (VAL-AGENT-001..005): 5 passed, 0 failed, 0 blocked."
+}

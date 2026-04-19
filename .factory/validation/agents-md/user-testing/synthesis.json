@@ -1,0 +1,28 @@
+{
+  "milestone": "agents-md",
+  "round": 1,
+  "status": "pass",
+  "assertionsSummary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-AGENT-001",
+    "VAL-AGENT-002",
+    "VAL-AGENT-003",
+    "VAL-AGENT-004",
+    "VAL-AGENT-005"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added vitest surface concurrency limit and flow validator guidance for VAL-AGENT assertions.",
+      "source": "setup"
+    }
+  ],
+  "previousRound": null
+}
