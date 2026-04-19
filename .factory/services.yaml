@@ -1,0 +1,22 @@
+commands:
+  install: cd /Users/lifan/dev/ai/apara && npm install
+  test:app: cd /Users/lifan/dev/ai/apara/app && npx vitest run
+  test:ext: cd /Users/lifan/dev/ai/apara/extension && npx vitest run
+  test: cd /Users/lifan/dev/ai/apara/app && npx vitest run && cd /Users/lifan/dev/ai/apara/extension && npx vitest run
+  lint: cd /Users/lifan/dev/ai/apara/app && npx oxlint
+  typecheck: cd /Users/lifan/dev/ai/apara && npx tsc --noEmit -p app/tsconfig.app.json && npx tsc --noEmit -p app/tsconfig.server.json
+
+services:
+  backend:
+    start: cd /Users/lifan/dev/ai/apara/app && APARA_REPO_PATH=$TEST_REPO_PATH bun run server/index.ts --port 3000 &
+    stop: lsof -ti :3000 | xargs kill 2>/dev/null || true
+    healthcheck: curl -sf http://localhost:3000/api/dashboard
+    port: 3000
+    depends_on: []
+
+  frontend:
+    start: cd /Users/lifan/dev/ai/apara/app && /Users/lifan/.vite-plus/bin/vp dev --port 5173 &
+    stop: lsof -ti :5173 | xargs kill 2>/dev/null || true
+    healthcheck: curl -sf http://localhost:5173
+    port: 5173
+    depends_on: [backend]
