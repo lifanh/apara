@@ -48,6 +48,7 @@ const port = Number.parseInt(values.port ?? "3000", 10);
 const hostname = isAuthEnabled() ? "0.0.0.0" : "127.0.0.1";
 const distPath = join(import.meta.dir, "..", "dist");
 const hasDistFiles = existsSync(distPath);
+const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 
 let piManager: PiManager | null = null;
 let activeWs: ServerWebSocket<unknown> | null = null;
@@ -199,6 +200,9 @@ const server = Bun.serve({
         }
         if (pathField !== null && typeof pathField !== "string") {
           return new Response("Invalid path", { status: 400 });
+        }
+        if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+          return new Response("Upload too large: file size exceeds 10MB limit", { status: 413 });
         }
 
         try {
