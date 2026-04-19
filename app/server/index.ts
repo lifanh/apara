@@ -5,6 +5,7 @@ import type { ServerWebSocket } from "bun";
 import { parseClientMessage, type ServerMessage } from "../src/lib/ws-types.js";
 import { checkAuth, createAuthCookie, isAuthEnabled, validateOrigin } from "./auth.js";
 import { getDashboardData } from "./dashboard.js";
+import { getGitStatus, runGitPull, runGitPush } from "./git.js";
 import { safePath } from "./path-utils.js";
 import { PiRpcClient } from "./lib/rpc-client.js";
 import { PiManager } from "./pi-manager.js";
@@ -225,6 +226,23 @@ const server = Bun.serve({
         return new Response(existsSync(logPath) ? readFileSync(logPath, "utf-8") : "", {
           headers: { "Content-Type": "text/markdown" },
         });
+      }
+
+      if (url.pathname === "/api/git/status") {
+        try {
+          return Response.json(getGitStatus(resolvedRepo));
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Failed to get git status";
+          return new Response(message, { status: 500 });
+        }
+      }
+
+      if (url.pathname === "/api/git/pull" && req.method === "POST") {
+        return Response.json(runGitPull(resolvedRepo));
+      }
+
+      if (url.pathname === "/api/git/push" && req.method === "POST") {
+        return Response.json(runGitPush(resolvedRepo));
       }
 
       return new Response("Not found", { status: 404 });
