@@ -27,19 +27,19 @@ export function ContentPanel({
         <TabsTrigger value="sources">Sources</TabsTrigger>
         <TabsTrigger value="timeline">Timeline</TabsTrigger>
       </TabsList>
-      <TabsContent value="dashboard" className="flex-1 overflow-hidden">
-        <Dashboard />
+      <TabsContent keepMounted value="dashboard" className="flex-1 overflow-hidden">
+        <Dashboard setChatInput={setChatInput} onOpenWikiPage={onOpenWikiPage} />
       </TabsContent>
-      <TabsContent value="wiki" className="flex-1 overflow-hidden">
+      <TabsContent keepMounted value="wiki" className="flex-1 overflow-hidden">
         <WikiBrowser
           selectedPath={selectedWikiPath}
           onOpenPage={onOpenWikiPage}
         />
       </TabsContent>
-      <TabsContent value="sources" className="flex-1 overflow-hidden">
+      <TabsContent keepMounted value="sources" className="flex-1 overflow-hidden">
         <SourceManager setChatInput={setChatInput} />
       </TabsContent>
-      <TabsContent value="timeline" className="flex-1 overflow-hidden">
+      <TabsContent keepMounted value="timeline" className="flex-1 overflow-hidden">
         <Timeline onOpenWikiPage={onOpenWikiPage} onTabChange={onTabChange} />
       </TabsContent>
     </Tabs>

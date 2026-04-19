@@ -8,7 +8,12 @@ interface DashboardData {
   stats: { wikiPages: number; sources: number; pendingCount: number };
 }
 
-export function Dashboard() {
+interface DashboardProps {
+  setChatInput: (value: string) => void;
+  onOpenWikiPage: (path: string) => void;
+}
+
+export function Dashboard({ setChatInput, onOpenWikiPage }: DashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,9 +55,16 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-1">
                 {data.pending.map((source) => (
-                  <li key={source} className="text-sm truncate" title={source}>
-                    <span className="text-muted-foreground mr-1.5">⬜</span>
-                    {source}
+                  <li key={source}>
+                    <button
+                      type="button"
+                      className="hover:bg-muted flex w-full items-center rounded px-1 py-0.5 text-left text-sm"
+                      title={source}
+                      onClick={() => setChatInput(`ingest ${source}`)}
+                    >
+                      <span className="text-muted-foreground mr-1.5">⬜</span>
+                      <span className="truncate">{source}</span>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -65,13 +77,19 @@ export function Dashboard() {
             ) : (
               <ul className="space-y-1">
                 {data.activePages.map((page) => (
-                  <li key={page.path} className="flex items-center justify-between text-sm">
-                    <span className="truncate" title={page.path}>
-                      {page.title}
-                    </span>
-                    <span className="text-muted-foreground ml-2 shrink-0 text-xs">
-                      {page.type} · {page.linkCount} links
-                    </span>
+                  <li key={page.path}>
+                    <button
+                      type="button"
+                      className="hover:bg-muted flex w-full items-center justify-between rounded px-1 py-0.5 text-left text-sm"
+                      onClick={() => onOpenWikiPage(page.path)}
+                    >
+                      <span className="truncate" title={page.path}>
+                        {page.title}
+                      </span>
+                      <span className="text-muted-foreground ml-2 shrink-0 text-xs">
+                        {page.type} · {page.linkCount} links
+                      </span>
+                    </button>
                   </li>
                 ))}
               </ul>
