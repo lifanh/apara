@@ -1,5 +1,6 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
 import { parse as parseYaml } from "yaml";
 
 export interface AparaConfig {
@@ -17,6 +18,13 @@ const DEFAULT_CONFIG: AparaConfig = {
   raw_dir: "raw",
   auto_commit: true,
 };
+
+const AGENTS_TEMPLATE_PATH = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "templates",
+  "AGENTS.md",
+);
 
 export function loadConfig(repoRoot: string): AparaConfig {
   const configPath = join(repoRoot, ".apara.yaml");
@@ -53,6 +61,12 @@ export function initRepo(repoRoot: string): void {
   const logPath = join(wikiDir, "log.md");
   if (!existsSync(logPath)) {
     writeFileSync(logPath, `# ${config.name} — Activity Log\n`);
+  }
+
+  const agentsPath = join(repoRoot, "AGENTS.md");
+  if (!existsSync(agentsPath)) {
+    const agentsTemplate = readFileSync(AGENTS_TEMPLATE_PATH, "utf-8");
+    writeFileSync(agentsPath, agentsTemplate);
   }
 }
 
