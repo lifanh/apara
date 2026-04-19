@@ -1,0 +1,28 @@
+{
+  "milestone": "git-sync",
+  "round": 1,
+  "status": "pass",
+  "assertionsSummary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0,
+    "blocked": 0
+  },
+  "passedAssertions": [
+    "VAL-GIT-001",
+    "VAL-GIT-002",
+    "VAL-GIT-003",
+    "VAL-GIT-004",
+    "VAL-GIT-005"
+  ],
+  "failedAssertions": [],
+  "blockedAssertions": [],
+  "appliedUpdates": [
+    {
+      "target": "user-testing.md",
+      "description": "Added git-sync note: run `git fetch origin` after remote-only commits before asserting behind counts.",
+      "source": "flow-report"
+    }
+  ],
+  "previousRound": null
+}

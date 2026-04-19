@@ -1,0 +1,69 @@
+{
+  "groupId": "git-no-remote",
+  "testedAt": "2026-04-19T15:12:35Z",
+  "isolation": {
+    "milestone": "git-sync",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:3000",
+    "repoPath": "/tmp/apara-test-repo-gitsync-noremote-319134ba",
+    "ports": [3000, 5173]
+  },
+  "toolsUsed": ["agent-browser", "curl"],
+  "assertions": [
+    {
+      "id": "VAL-GIT-005",
+      "title": "Error handling for repos without remotes",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Restart backend on port 3000 with APARA_REPO_PATH=/tmp/apara-test-repo-gitsync-noremote-319134ba",
+          "expected": "Backend serves git status for the no-remote repo",
+          "observed": "Backend restarted successfully and responded on http://localhost:3000"
+        },
+        {
+          "action": "GET /api/git/status",
+          "expected": "HTTP 200 with remote: null",
+          "observed": "HTTP 200 and body {\"branch\":\"main\",\"ahead\":0,\"behind\":0,\"remote\":null}"
+        },
+        {
+          "action": "Open UI at http://localhost:5173 and inspect SyncStatus",
+          "expected": "Branch name shown with explicit no-remote indicator",
+          "observed": "UI shows 'Branch: main' and 'no remote'"
+        },
+        {
+          "action": "Check Pull and Push controls",
+          "expected": "Both buttons disabled when no remote configured",
+          "observed": "Pull enabled=false and Push enabled=false"
+        },
+        {
+          "action": "Capture console errors",
+          "expected": "No console errors",
+          "observed": "agent-browser errors returned []"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "git-sync/git-no-remote/VAL-GIT-005-ui-syncstatus.png"
+        ],
+        "consoleErrors": "git-sync/git-no-remote/VAL-GIT-005-console-errors.json",
+        "network": "agent-browser network capture returned no requests; fallback curl evidence: git-sync/git-no-remote/VAL-GIT-005-api-git-status-headers.txt + git-sync/git-no-remote/VAL-GIT-005-api-git-status-body.json",
+        "artifacts": [
+          "git-sync/git-no-remote/VAL-GIT-005-ui-body-text.txt",
+          "git-sync/git-no-remote/VAL-GIT-005-button-enabled.txt",
+          "git-sync/git-no-remote/VAL-GIT-005-network-requests.txt"
+        ]
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "agent-browser network capture returned 'No requests captured' for this run",
+      "resolved": true,
+      "resolution": "Collected endpoint evidence with curl headers/body output for GET /api/git/status",
+      "affectedAssertions": ["VAL-GIT-005"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 1 assertion (VAL-GIT-005): pass. API returned 200 with remote null, UI showed branch + no-remote indicator, Pull/Push were disabled, and no console errors were observed."
+}

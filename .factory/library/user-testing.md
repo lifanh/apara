@@ -35,6 +35,7 @@
 - For timeline validation `VAL-TL-005`, the default fixture may not include a wiki-page path entry in `wiki/log.md`; append a temporary entry like `## [2026-04-13] query | entities/typescript.md` for navigation validation, then restore the original log.
 - For panel-wiring validation `VAL-WIRE-003`, send a prompt and wait for an assistant message; if no assistant response can be produced due missing `pi`, mark the assertion blocked with screenshot evidence.
 - In chat-related assertions, wait until the input is enabled (not `Connecting…`) before validating pre-fill behavior.
+- For git-sync behind-state checks, after pushing a remote-only commit from a second clone, run `git fetch origin` in the backend repo before asserting `behind > 0` so tracking refs are current.
 
 ## Validation Concurrency
 

@@ -1,0 +1,150 @@
+{
+  "groupId": "git-remote",
+  "testedAt": "2026-04-19T15:09:41Z",
+  "isolation": {
+    "missionDir": "/Users/lifan/.factory/missions/5425a29a-aae7-4167-9768-fb4d1b79fcb8",
+    "appUrl": "http://localhost:5173",
+    "apiUrl": "http://localhost:3000",
+    "repoPath": "/tmp/apara-test-repo-gitsync-319134ba",
+    "remotePath": "/tmp/apara-git-remote-319134ba-1776611030.git",
+    "writerClonePath": "/tmp/apara-remote-writer-319134ba-1776611030"
+  },
+  "toolsUsed": ["agent-browser", "curl", "git"],
+  "assertions": [
+    {
+      "id": "VAL-GIT-001",
+      "title": "SyncStatus component renders with branch name",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Open http://localhost:5173 and capture SyncStatus area",
+          "expected": "SyncStatus visible with non-empty branch name",
+          "observed": "UI shows \"Branch: main\" with Pull/Push controls"
+        },
+        {
+          "action": "GET /api/git/status",
+          "expected": "200 response with branch and sync fields",
+          "observed": "200 with {\"branch\":\"main\",\"ahead\":0,\"behind\":0,\"remote\":\"origin/main\"}"
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "git-sync/git-remote/VAL-GIT-001-syncstatus.png"
+        ],
+        "consoleErrors": "none (git-sync/git-remote/VAL-GIT-001-console-errors.txt)",
+        "network": "GET /api/git/status -> 200 (git-sync/git-remote/VAL-GIT-001-status-initial.http); session request log: git-sync/git-remote/VAL-GIT-001-network-status-from-session.txt"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-GIT-002",
+      "title": "Status shows correct ahead/behind counts",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "Create one local commit in test repo without pushing, then reload UI/status",
+          "expected": "UI/API show ahead by 1",
+          "observed": "API returned ahead:1, behind:0 and UI text showed \"ahead by 1\""
+        },
+        {
+          "action": "Create and push one remote-only commit from writer clone (then fetch local tracking refs), then reload UI/status",
+          "expected": "UI/API show behind by 1",
+          "observed": "API returned ahead:0, behind:1 and UI text showed \"behind by 1\""
+        },
+        {
+          "action": "After push/pull cycle, refresh status",
+          "expected": "UI/API show up-to-date state",
+          "observed": "API returned ahead:0, behind:0 and UI text showed \"up to date\""
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "git-sync/git-remote/VAL-GIT-002-ahead-ui.png",
+          "git-sync/git-remote/VAL-GIT-002-behind-ui.png",
+          "git-sync/git-remote/VAL-GIT-002-final-up-to-date-ui.png"
+        ],
+        "consoleErrors": "none (git-sync/git-remote/VAL-GIT-002-console-errors.txt; git-sync/git-remote/VAL-GIT-final-console-errors.txt)",
+        "network": "GET /api/git/status evidence: git-sync/git-remote/VAL-GIT-002-status-ahead.http, git-sync/git-remote/VAL-GIT-002-status-behind-after-fetch.http, git-sync/git-remote/VAL-GIT-002-status-final-up-to-date.http"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-GIT-003",
+      "title": "Pull button triggers git pull",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "From behind-by-1 state, click Pull",
+          "expected": "POST /api/git/pull is sent",
+          "observed": "Session network log captured POST /api/git/pull"
+        },
+        {
+          "action": "Sample Pull button state at 10ms intervals immediately after click",
+          "expected": "Button disabled while request is in flight",
+          "observed": "Sampling recorded disabled=true with label \"Pulling…\" before returning to enabled \"Pull\""
+        },
+        {
+          "action": "Check status/UI after pull",
+          "expected": "Behind count becomes 0",
+          "observed": "API returned behind:0 and UI showed \"up to date\""
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "git-sync/git-remote/VAL-GIT-003-before-pull.png",
+          "git-sync/git-remote/VAL-GIT-003-after-pull.png"
+        ],
+        "consoleErrors": "none (git-sync/git-remote/VAL-GIT-003-console-errors.txt)",
+        "network": "POST /api/git/pull captured in git-sync/git-remote/VAL-GIT-003-network-pull.txt; fallback endpoint evidence in git-sync/git-remote/VAL-GIT-003-curl-post-pull.http"
+      },
+      "issues": null
+    },
+    {
+      "id": "VAL-GIT-004",
+      "title": "Push button triggers git push",
+      "status": "pass",
+      "steps": [
+        {
+          "action": "From ahead-by-1 state, click Push",
+          "expected": "POST /api/git/push is sent",
+          "observed": "Session network log captured POST /api/git/push"
+        },
+        {
+          "action": "Sample Push button state at 10ms intervals immediately after click",
+          "expected": "Button disabled while request is in flight",
+          "observed": "Sampling recorded disabled=true with label \"Pushing…\" before returning to enabled \"Push\""
+        },
+        {
+          "action": "Check status/UI after push",
+          "expected": "Ahead count becomes 0",
+          "observed": "API returned ahead:0 and UI showed \"up to date\""
+        }
+      ],
+      "evidence": {
+        "screenshots": [
+          "git-sync/git-remote/VAL-GIT-004-before-second-push.png",
+          "git-sync/git-remote/VAL-GIT-004-after-second-push.png"
+        ],
+        "consoleErrors": "none (git-sync/git-remote/VAL-GIT-004-console-errors-2.txt)",
+        "network": "POST /api/git/push captured in git-sync/git-remote/VAL-GIT-004-network-push-from-session.txt; fallback endpoint evidence in git-sync/git-remote/VAL-GIT-004-curl-post-push.http"
+      },
+      "issues": null
+    }
+  ],
+  "frictions": [
+    {
+      "description": "Writer clone push was initially rejected (non-fast-forward) because it was behind remote after local push testing.",
+      "resolved": true,
+      "resolution": "Ran git pull --rebase origin main in writer clone, then pushed successfully.",
+      "affectedAssertions": ["VAL-GIT-002"]
+    },
+    {
+      "description": "After remote-only commit was pushed, /api/git/status still showed behind:0 until local tracking refs were refreshed.",
+      "resolved": true,
+      "resolution": "Ran git fetch origin in /tmp/apara-test-repo-gitsync-319134ba, then UI/API reflected behind by 1.",
+      "affectedAssertions": ["VAL-GIT-002", "VAL-GIT-003"]
+    }
+  ],
+  "blockers": [],
+  "summary": "Tested 4 assertions: 4 passed, 0 failed, 0 blocked. Verified branch rendering, ahead/behind/up-to-date states, and pull/push flows including in-flight button disable behavior."
+}
