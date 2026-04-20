@@ -2,12 +2,12 @@ import { existsSync, readFileSync } from "fs";
 import { join, resolve } from "path";
 import { parseArgs } from "util";
 import type { ServerWebSocket } from "bun";
+import { getAgentDir } from "@mariozechner/pi-coding-agent";
 import { parseClientMessage, type ServerMessage } from "../src/lib/ws-types.js";
 import { checkAuth, createAuthCookie, isAuthEnabled, validateOrigin } from "./auth.js";
 import { getDashboardData } from "./dashboard.js";
 import { getGitStatus, runGitPull, runGitPush } from "./git.js";
 import { safePath } from "./path-utils.js";
-import { PiRpcClient } from "./lib/rpc-client.js";
 import { PiManager } from "./pi-manager.js";
 import { getSourcePreview, listSources, writeUploadedSource } from "./sources.js";
 import { getWikiPageData, listWikiPages } from "./wiki.js";
@@ -271,14 +271,17 @@ const server = Bun.serve({
       }
 
       activeWs = ws;
-      piManager = new PiManager(
-        new PiRpcClient({
-          cwd: resolvedRepo,
-          extensionPath: resolve(import.meta.dir, "../../extension/apara.ts"),
-        })
-      );
+      piManager = new PiManager(resolvedRepo, getAgentDir());
       piManager.onMessage((message: ServerMessage) => {
         ws.send(JSON.stringify(message));
+      });
+      piManager.init().catch((err) => {
+        ws.send(JSON.stringify({
+          type: "error",
+          code: "init_failed",
+          message: err instanceof Error ? err.message : "Failed to initialize agent",
+        } satisfies ServerMessage));
+        ws.close(1011, "Agent init failed");
       });
       resetHeartbeat();
     },

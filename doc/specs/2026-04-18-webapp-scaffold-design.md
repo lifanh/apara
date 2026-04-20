@@ -35,7 +35,7 @@
   │     ├── Serves React SPA (static files)
   │     ├── REST API (/api/*)
   │     └── WebSocket (/ws)
-  ├── Pi Agent subprocess (pi --mode rpc)
+  ├── Pi Agent SDK (in-process, via @mariozechner/pi-coding-agent)
   └── Git repo (raw/ + wiki/)
         └── git push/pull to GitHub for backup/sync
 ```
@@ -46,14 +46,13 @@
 app/
 ├── server/              # Bun server code
 │   ├── index.ts         # Entry point: Bun.serve()
-│   ├── pi-manager.ts    # Pi Agent subprocess lifecycle
-│   ├── auth.ts          # Optional auth middleware
-│   └── lib/
-│       └── rpc-client.ts    # (moved from src/lib/, server-only)
+│   ├── pi-manager.ts    # Pi Agent SDK session lifecycle
+│   ├── tools.ts         # APARA tool definitions for SDK customTools
+│   └── auth.ts          # Optional auth middleware
 ├── src/                 # React SPA (Vite root)
 │   ├── components/      # React components
 │   ├── lib/             # Shared types, stores, utilities
-│   │   └── rpc-types.ts     # (existing, shared by server + client)
+│   │   └── ws-types.ts      # WebSocket message types (client + server)
 │   ├── App.tsx
 │   └── main.tsx
 ├── public/              # Static assets
@@ -103,18 +102,17 @@ All file-path parameters are resolved against the repo root and boundary-checked
 
 ### Bun Server ↔ Pi Agent
 
-- Uses the existing `PiRpcClient` — moves from `app/src/lib/` to `app/server/lib/` since it uses Node/Bun APIs (`child_process`, `EventEmitter`) and is server-only code. The `rpc-types.ts` stays shared in `app/src/lib/` since both server and client reference the event types.
-- Bun spawns one Pi Agent subprocess per session
-- RPC client forwards WebSocket messages as `RpcCommand` objects to Pi stdin
-- RPC client receives `RpcEvent` objects, maps them to `ServerMessage`, and forwards over WebSocket
+- Uses Pi Agent SDK (`createAgentSession` from `@mariozechner/pi-coding-agent`) — the agent runs in-process, no subprocess.
+- APARA tools are registered as `customTools` on the session (defined in `app/server/tools.ts`).
+- `PiManager` subscribes to `AgentSession` events and maps them to `ServerMessage` for the WebSocket.
 
 ### Session lifecycle
 
 - **One session = one WebSocket connection.** Single-user system; only one active session at a time.
 - **One active prompt at a time.** A second `prompt` message while one is running returns an error.
-- **Reconnect:** On WebSocket close, the Pi subprocess is killed after a short grace period (5s). A new connection spawns a fresh subprocess. No session resume in v1.
-- **Heartbeat:** Client sends `ping` every 30s. Server responds with `pong`. If no ping is received for 60s, server closes the connection and cleans up the subprocess.
-- **Cleanup:** On server shutdown or unexpected disconnect, all child processes are killed via process group signal.
+- **Reconnect:** On WebSocket close, the agent session is disposed after a short grace period (5s). A new connection creates a fresh in-memory session. No session resume in v1.
+- **Heartbeat:** Client sends `ping` every 30s. Server responds with `pong`. If no ping is received for 60s, server closes the connection and cleans up the session.
+- **Cleanup:** On server shutdown or unexpected disconnect, the agent session is disposed.
 
 ### Chat message flow
 

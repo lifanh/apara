@@ -1,56 +1,71 @@
-import { EventEmitter } from "events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PiManager } from "../server/pi-manager.js";
+import type { ServerMessage } from "../src/lib/ws-types.js";
 
-function createMockRpcClient() {
-  const client = new EventEmitter() as EventEmitter & {
-    start: ReturnType<typeof vi.fn>;
-    stop: ReturnType<typeof vi.fn>;
-    prompt: ReturnType<typeof vi.fn>;
-    abort: ReturnType<typeof vi.fn>;
-    isRunning: boolean;
+vi.mock("@mariozechner/pi-coding-agent", () => ({
+  createAgentSession: vi.fn(),
+  createCodingTools: vi.fn(() => []),
+  SessionManager: { inMemory: vi.fn(() => ({})) },
+  SettingsManager: { inMemory: vi.fn(() => ({})) },
+  AuthStorage: { create: vi.fn(() => ({})) },
+  ModelRegistry: { create: vi.fn(() => ({})) },
+  getAgentDir: vi.fn(() => "/tmp/agent"),
+}));
+
+vi.mock("../server/tools.js", () => ({
+  createAparaTools: vi.fn(() => []),
+}));
+
+const { PiManager } = await import("../server/pi-manager.js");
+
+function createMockSession() {
+  let listener: ((event: Record<string, unknown>) => void) | null = null;
+  return {
+    prompt: vi.fn().mockResolvedValue(undefined),
+    abort: vi.fn().mockResolvedValue(undefined),
+    dispose: vi.fn(),
+    subscribe: vi.fn((fn: (event: Record<string, unknown>) => void) => {
+      listener = fn;
+      return () => {
+        listener = null;
+      };
+    }),
+    emit(event: Record<string, unknown>) {
+      listener?.(event);
+    },
   };
-
-  client.start = vi.fn();
-  client.stop = vi.fn();
-  client.prompt = vi.fn().mockResolvedValue(undefined);
-  client.abort = vi.fn();
-  client.isRunning = false;
-  return client;
 }
 
 describe("PiManager", () => {
-  let manager: PiManager;
-  let mockClient: ReturnType<typeof createMockRpcClient>;
+  let manager: InstanceType<typeof PiManager>;
+  let mockSession: ReturnType<typeof createMockSession>;
+  let messages: ServerMessage[];
 
-  beforeEach(() => {
-    mockClient = createMockRpcClient();
-    manager = new PiManager(mockClient as any);
+  beforeEach(async () => {
+    mockSession = createMockSession();
+
+    const { createAgentSession } = await import("@mariozechner/pi-coding-agent");
+    (createAgentSession as ReturnType<typeof vi.fn>).mockResolvedValue({
+      session: mockSession,
+      extensionsResult: { extensions: [], errors: [] },
+    });
+
+    manager = new PiManager("/tmp/repo", "/tmp/agent");
+    await manager.init();
+
+    messages = [];
+    manager.onMessage((msg: ServerMessage) => messages.push(msg));
   });
 
   describe("handlePrompt", () => {
-    it("starts the client if not running", () => {
-      mockClient.isRunning = false;
-      manager.handlePrompt("hello");
-      expect(mockClient.start).toHaveBeenCalled();
+    it("sends prompt to session and emits run_started", () => {
+      const result = manager.handlePrompt("hello");
+      expect(result).toBeUndefined();
+      expect(mockSession.prompt).toHaveBeenCalledWith("hello");
+      expect(messages[0]).toEqual(expect.objectContaining({ type: "run_started" }));
     });
 
-    it("does not start the client if already running", () => {
-      mockClient.isRunning = true;
-      manager.handlePrompt("hello");
-      expect(mockClient.start).not.toHaveBeenCalled();
-    });
-
-    it("sends the prompt to the client", () => {
-      mockClient.isRunning = true;
-      manager.handlePrompt("hello");
-      expect(mockClient.prompt).toHaveBeenCalledWith("hello");
-    });
-
-    it("returns an error if a prompt is already active", () => {
-      mockClient.isRunning = true;
+    it("returns busy error if prompt already active", () => {
       manager.handlePrompt("first");
-
       const result = manager.handlePrompt("second");
       expect(result).toEqual({
         type: "error",
@@ -59,61 +74,49 @@ describe("PiManager", () => {
       });
     });
 
-    it("allows a new prompt after agent_end", () => {
-      mockClient.isRunning = true;
+    it("allows new prompt after agent_end", () => {
       manager.handlePrompt("first");
-
-      mockClient.emit("agent_end", { type: "agent_end", messages: [] });
+      mockSession.emit({ type: "agent_end", messages: [] });
 
       const result = manager.handlePrompt("second");
       expect(result).toBeUndefined();
-      expect(mockClient.prompt).toHaveBeenCalledTimes(2);
+      expect(mockSession.prompt).toHaveBeenCalledTimes(2);
+    });
+
+    it("returns not_ready error before init", () => {
+      const uninitManager = new PiManager("/tmp/repo", "/tmp/agent");
+      const result = uninitManager.handlePrompt("hello");
+      expect(result).toEqual({
+        type: "error",
+        code: "not_ready",
+        message: "Agent session not initialized",
+      });
     });
   });
 
   describe("handleAbort", () => {
-    it("calls abort on the client", () => {
-      mockClient.isRunning = true;
+    it("calls abort on session", () => {
       manager.handleAbort();
-      expect(mockClient.abort).toHaveBeenCalled();
+      expect(mockSession.abort).toHaveBeenCalled();
     });
   });
 
   describe("event mapping", () => {
     it("maps text_delta to assistant_delta", () => {
-      mockClient.isRunning = true;
-      const messages: unknown[] = [];
-      manager.onMessage((msg) => messages.push(msg));
-
       manager.handlePrompt("hello");
-
-      mockClient.emit("event", {
+      mockSession.emit({
         type: "message_update",
-        message: {},
-        assistantMessageEvent: {
-          type: "text_delta",
-          contentIndex: 0,
-          delta: "hi there",
-        },
+        assistantMessageEvent: { type: "text_delta", delta: "hi there" },
       });
 
-      expect(messages).toHaveLength(2);
-      expect(messages[1]).toEqual(
-        expect.objectContaining({
-          type: "assistant_delta",
-          text: "hi there",
-        })
+      expect(messages).toContainEqual(
+        expect.objectContaining({ type: "assistant_delta", text: "hi there" }),
       );
     });
 
     it("maps tool_execution_start to tool_status start", () => {
-      mockClient.isRunning = true;
-      const messages: unknown[] = [];
-      manager.onMessage((msg) => messages.push(msg));
-
       manager.handlePrompt("hello");
-
-      mockClient.emit("event", {
+      mockSession.emit({
         type: "tool_execution_start",
         toolCallId: "tc1",
         toolName: "apara_ingest",
@@ -121,32 +124,37 @@ describe("PiManager", () => {
       });
 
       expect(messages).toContainEqual(
-        expect.objectContaining({
-          type: "tool_status",
-          tool: "apara_ingest",
-          status: "start",
-        })
+        expect.objectContaining({ type: "tool_status", tool: "apara_ingest", status: "start" }),
+      );
+    });
+
+    it("maps tool_execution_end to tool_status end", () => {
+      manager.handlePrompt("hello");
+      mockSession.emit({
+        type: "tool_execution_end",
+        toolCallId: "tc1",
+        toolName: "apara_ingest",
+        result: {},
+        isError: false,
+      });
+
+      expect(messages).toContainEqual(
+        expect.objectContaining({ type: "tool_status", tool: "apara_ingest", status: "end" }),
       );
     });
 
     it("maps agent_end to run_finished", () => {
-      mockClient.isRunning = true;
-      const messages: unknown[] = [];
-      manager.onMessage((msg) => messages.push(msg));
-
       manager.handlePrompt("hello");
-      mockClient.emit("agent_end", { type: "agent_end", messages: [] });
+      mockSession.emit({ type: "agent_end", messages: [] });
 
-      expect(messages).toContainEqual(
-        expect.objectContaining({ type: "run_finished" })
-      );
+      expect(messages).toContainEqual(expect.objectContaining({ type: "run_finished" }));
     });
   });
 
   describe("cleanup", () => {
-    it("stops the client", () => {
+    it("disposes session", () => {
       manager.cleanup();
-      expect(mockClient.stop).toHaveBeenCalled();
+      expect(mockSession.dispose).toHaveBeenCalled();
     });
   });
 });

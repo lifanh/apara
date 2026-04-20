@@ -1,24 +1,46 @@
 import { randomUUID } from "crypto";
-import type { RpcEvent } from "../src/lib/rpc-types.js";
+import {
+  createAgentSession,
+  createCodingTools,
+  SessionManager,
+  SettingsManager,
+  AuthStorage,
+  ModelRegistry,
+  type AgentSession,
+  type AgentSessionEvent,
+} from "@mariozechner/pi-coding-agent";
 import type { ServerMessage } from "../src/lib/ws-types.js";
-import type { PiRpcClient } from "./lib/rpc-client.js";
+import { createAparaTools } from "./tools.js";
 
 export class PiManager {
+  private session: AgentSession | null = null;
+  private unsubscribe: (() => void) | null = null;
   private activeRunId: string | null = null;
   private messageHandler: ((message: ServerMessage) => void) | null = null;
 
-  constructor(private client: PiRpcClient) {
-    this.client.on("event", (event: RpcEvent) => this.mapEvent(event));
-    this.client.on("agent_end", () => {
-      if (!this.activeRunId) {
-        return;
-      }
+  constructor(
+    private repoPath: string,
+    private agentDir: string,
+  ) {}
 
-      this.emit({
-        type: "run_finished",
-        runId: this.activeRunId,
-      });
-      this.activeRunId = null;
+  async init(): Promise<void> {
+    const authStorage = AuthStorage.create(this.agentDir);
+    const modelRegistry = ModelRegistry.create(authStorage, this.agentDir);
+
+    const { session } = await createAgentSession({
+      cwd: this.repoPath,
+      agentDir: this.agentDir,
+      tools: createCodingTools(this.repoPath),
+      customTools: createAparaTools(this.repoPath),
+      sessionManager: SessionManager.inMemory(),
+      settingsManager: SettingsManager.inMemory(),
+      authStorage,
+      modelRegistry,
+    });
+
+    this.session = session;
+    this.unsubscribe = session.subscribe((event: AgentSessionEvent) => {
+      this.mapEvent(event);
     });
   }
 
@@ -31,21 +53,22 @@ export class PiManager {
       };
     }
 
-    if (!this.client.isRunning) {
-      this.client.start();
+    if (!this.session) {
+      return {
+        type: "error",
+        code: "not_ready",
+        message: "Agent session not initialized",
+      };
     }
 
     this.activeRunId = randomUUID();
-    this.emit({
-      type: "run_started",
-      runId: this.activeRunId,
-    });
-    void this.client.prompt(text);
+    this.emit({ type: "run_started", runId: this.activeRunId });
+    void this.session.prompt(text);
     return undefined;
   }
 
   handleAbort(): void {
-    this.client.abort();
+    void this.session?.abort();
   }
 
   onMessage(handler: (message: ServerMessage) => void): void {
@@ -53,7 +76,10 @@ export class PiManager {
   }
 
   cleanup(): void {
-    this.client.stop();
+    this.unsubscribe?.();
+    this.unsubscribe = null;
+    this.session?.dispose();
+    this.session = null;
     this.activeRunId = null;
   }
 
@@ -61,10 +87,8 @@ export class PiManager {
     this.messageHandler?.(message);
   }
 
-  private mapEvent(event: RpcEvent): void {
-    if (!this.activeRunId) {
-      return;
-    }
+  private mapEvent(event: AgentSessionEvent): void {
+    if (!this.activeRunId) return;
 
     switch (event.type) {
       case "message_update": {
@@ -84,9 +108,7 @@ export class PiManager {
         break;
       }
       case "tool_execution_start": {
-        if (typeof event.toolName !== "string") {
-          break;
-        }
+        if (typeof event.toolName !== "string") break;
         this.emit({
           type: "tool_status",
           runId: this.activeRunId,
@@ -96,15 +118,21 @@ export class PiManager {
         break;
       }
       case "tool_execution_end": {
-        if (typeof event.toolName !== "string") {
-          break;
-        }
+        if (typeof event.toolName !== "string") break;
         this.emit({
           type: "tool_status",
           runId: this.activeRunId,
           tool: event.toolName,
           status: "end",
         });
+        break;
+      }
+      case "agent_end": {
+        this.emit({
+          type: "run_finished",
+          runId: this.activeRunId,
+        });
+        this.activeRunId = null;
         break;
       }
     }
