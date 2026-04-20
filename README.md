@@ -14,7 +14,7 @@ Git Repo (data) → Pi Agent (engine) → Web App (UI)
 
 - **Git Repo** — a standard git repository containing raw source documents (`raw/`) and the LLM-maintained wiki (`wiki/`). Human-readable markdown, synced across devices via git.
 - **Pi Agent Extension** — a [Pi Coding Agent](https://github.com/nichochar/pi-coding-agent) extension providing three tools: ingest, query, and lint.
-- **Web App** — a React 19 + Tailwind CSS + shadcn UI with a Bun backend server, communicating with Pi Agent via RPC (JSON Lines over stdin/stdout). REST API + WebSocket for real-time updates.
+- **Web App** — a React 19 + Tailwind CSS + shadcn UI with a Bun backend server. Pi Agent runs in-process via the SDK (`@mariozechner/pi-coding-agent`). REST API + WebSocket for real-time updates.
 
 ## Knowledge Repo Structure
 
@@ -64,7 +64,7 @@ apara/                            # this repo (application code)
 │   ├── src/                      # React frontend
 │   │   └── components/           # Dashboard, WikiBrowser, SourceManager,
 │   │                             # ChatPanel, Timeline, SyncStatus
-│   ├── server/                   # Bun HTTP/WebSocket server (REST API + Pi Agent RPC)
+│   ├── server/                   # Bun HTTP/WebSocket server (REST API + Pi Agent SDK)
 │   └── test/                     # tests
 └── doc/
     ├── llm-wiki.md               # LLM Wiki pattern reference
@@ -89,6 +89,30 @@ cd app && bun run server/index.ts --repo /path/to/knowledge-repo
 # Run app tests
 cd app && bunx vp test
 ```
+
+## Deployment
+
+### Local
+
+```bash
+cd app && bun run server/index.ts --repo /path/to/knowledge-repo
+```
+
+Opens on `http://localhost:3000`. No auth required — server binds to `127.0.0.1` only.
+
+### Cloud (VPS)
+
+Set environment variables and run the same server binary:
+
+```bash
+export APARA_REPO_PATH=/path/to/knowledge-repo
+export APARA_AUTH_TOKEN=your-secret-token
+cd app && bun run server/index.ts --port 3000
+```
+
+With `APARA_AUTH_TOKEN` set, the server binds to `0.0.0.0` and requires token authentication. The knowledge repo should be a git repo on the server's persistent disk — use `git push`/`pull` (available in the UI) for backup and sync.
+
+**Requirements:** Bun runtime. No external processes needed — Pi Agent runs in-process via the SDK.
 
 ## Status
 
