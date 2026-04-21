@@ -11,6 +11,7 @@ import { safePath } from "./path-utils.js";
 import { PiManager } from "./pi-manager.js";
 import { getSourcePreview, listSources, writeUploadedSource } from "./sources.js";
 import { getWikiPageData, listWikiPages } from "./wiki.js";
+import { createChat, deleteChat, getChat, listChats, saveChat, updateChatTitle, type StoredConversation } from "./chats.js";
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -35,6 +36,7 @@ const resolvedRepo = resolve(repoPath);
 const configPath = join(resolvedRepo, ".apara.yaml");
 const wikiPath = join(resolvedRepo, "wiki");
 const rawPath = join(resolvedRepo, "raw");
+const chatsPath = join(resolvedRepo, ".apara", "chats");
 
 if (!existsSync(configPath) && !(existsSync(wikiPath) && existsSync(rawPath))) {
   console.error(
@@ -53,6 +55,7 @@ const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 let piManager: PiManager | null = null;
 let activeWs: ServerWebSocket<unknown> | null = null;
 let heartbeatTimer: ReturnType<typeof setTimeout> | null = null;
+let activeConversation: StoredConversation | null = null;
 
 function resetHeartbeat() {
   if (!activeWs) {
@@ -72,6 +75,7 @@ function resetHeartbeat() {
 function cleanupSession() {
   piManager?.cleanup();
   piManager = null;
+  activeConversation = null;
   activeWs = null;
   if (heartbeatTimer) {
     clearTimeout(heartbeatTimer);
@@ -249,6 +253,49 @@ const server = Bun.serve({
         return Response.json(runGitPush(resolvedRepo));
       }
 
+      if (url.pathname === "/api/chats" && req.method === "GET") {
+        return Response.json(listChats(chatsPath));
+      }
+
+      if (url.pathname === "/api/chats" && req.method === "POST") {
+        return Response.json(createChat(chatsPath));
+      }
+
+      if (url.pathname.startsWith("/api/chats/")) {
+        const chatId = url.pathname.slice("/api/chats/".length);
+        if (!chatId) {
+          return new Response("Not found", { status: 404 });
+        }
+
+        if (req.method === "GET") {
+          const chat = getChat(chatsPath, chatId);
+          if (!chat) {
+            return new Response("Not found", { status: 404 });
+          }
+          return Response.json(chat);
+        }
+
+        if (req.method === "PATCH") {
+          const body = (await req.json()) as { title?: string };
+          if (typeof body.title !== "string") {
+            return new Response("title is required", { status: 400 });
+          }
+          const ok = updateChatTitle(chatsPath, chatId, body.title);
+          if (!ok) {
+            return new Response("Not found", { status: 404 });
+          }
+          return Response.json({ ok: true });
+        }
+
+        if (req.method === "DELETE") {
+          const ok = deleteChat(chatsPath, chatId);
+          if (!ok) {
+            return new Response("Not found", { status: 404 });
+          }
+          return Response.json({ ok: true });
+        }
+      }
+
       return new Response("Not found", { status: 404 });
     }
 
@@ -274,6 +321,11 @@ const server = Bun.serve({
       piManager = new PiManager(resolvedRepo, getAgentDir());
       piManager.onMessage((message: ServerMessage) => {
         ws.send(JSON.stringify(message));
+      });
+      piManager.onRunFinished(() => {
+        if (activeConversation) {
+          saveChat(chatsPath, activeConversation);
+        }
       });
       piManager.init().catch((err) => {
         ws.send(JSON.stringify({
@@ -303,12 +355,28 @@ const server = Bun.serve({
           const error = piManager?.handlePrompt(parsed.text);
           if (error) {
             ws.send(JSON.stringify(error));
+          } else if (activeConversation) {
+            activeConversation.messages.push({
+              id: crypto.randomUUID(),
+              role: "user",
+              text: parsed.text,
+              tools: [],
+              finished: true,
+            });
+            saveChat(chatsPath, activeConversation);
           }
           break;
         }
         case "abort":
           piManager?.handleAbort();
           break;
+        case "set_conversation": {
+          const chat = getChat(chatsPath, parsed.conversationId);
+          if (chat) {
+            activeConversation = chat;
+          }
+          break;
+        }
         case "ping":
           ws.send(JSON.stringify({ type: "pong" satisfies ServerMessage["type"] }));
           break;
