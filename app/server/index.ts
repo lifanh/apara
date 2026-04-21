@@ -399,10 +399,7 @@ const server = Bun.serve({
 
       switch (parsed.type) {
         case "prompt": {
-          const error = piManager?.handlePrompt(parsed.text);
-          if (error) {
-            ws.send(JSON.stringify(error));
-          } else if (activeConversation) {
+          if (activeConversation) {
             activeConversation.messages.push({
               id: crypto.randomUUID(),
               role: "user",
@@ -410,6 +407,14 @@ const server = Bun.serve({
               tools: [],
               finished: true,
             });
+          }
+          const error = piManager?.handlePrompt(parsed.text);
+          if (error) {
+            if (activeConversation) {
+              activeConversation.messages.pop();
+            }
+            ws.send(JSON.stringify(error));
+          } else if (activeConversation) {
             saveChat(chatsPath, activeConversation);
           }
           break;
