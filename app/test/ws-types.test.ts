@@ -32,6 +32,15 @@ describe("ws-types", () => {
     it("returns null for prompt without text", () => {
       expect(parseClientMessage('{"type":"prompt"}')).toBeNull();
     });
+
+    it("parses a valid set_conversation message", () => {
+      const msg = parseClientMessage('{"type":"set_conversation","conversationId":"abc-123"}');
+      expect(msg).toEqual({ type: "set_conversation", conversationId: "abc-123" });
+    });
+
+    it("returns null for set_conversation without conversationId", () => {
+      expect(parseClientMessage('{"type":"set_conversation"}')).toBeNull();
+    });
   });
 
   describe("parseServerMessage", () => {

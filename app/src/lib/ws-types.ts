@@ -1,7 +1,8 @@
 export type ClientMessage =
   | { type: "prompt"; text: string }
   | { type: "abort" }
-  | { type: "ping" };
+  | { type: "ping" }
+  | { type: "set_conversation"; conversationId: string };
 
 export type ServerMessage =
   | { type: "run_started"; runId: string }
@@ -28,6 +29,11 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: "abort" };
     case "ping":
       return { type: "ping" };
+    case "set_conversation":
+      if (typeof obj.conversationId !== "string" || obj.conversationId.length === 0) {
+        return null;
+      }
+      return { type: "set_conversation", conversationId: obj.conversationId };
     default:
       return null;
   }
