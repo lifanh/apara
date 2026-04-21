@@ -1,9 +1,9 @@
-import { useEffect, useRef, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, type FormEvent } from "react";
+import { MarkdownContent } from "@/components/MarkdownContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useChat, type ChatMessage } from "@/lib/use-chat";
-import { findWikiPageMentions } from "@/lib/wiki-links";
 
 interface ChatPanelProps {
   onOpenWikiPage: (path: string) => void;
@@ -102,12 +102,18 @@ function MessageBubble({
             : "bg-muted text-foreground"
         }`}
       >
-        <div className="whitespace-pre-wrap break-words">
-          <MessageText text={message.text} onOpenWikiPage={onOpenWikiPage} />
-          {!message.finished && message.role === "assistant" && (
-            <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-current" />
-          )}
-        </div>
+        {isUser ? (
+          <div className="whitespace-pre-wrap break-words">{message.text}</div>
+        ) : (
+          <div className="prose-sm max-w-none space-y-2">
+            <MarkdownContent onLinkClick={onOpenWikiPage}>
+              {message.text}
+            </MarkdownContent>
+            {!message.finished && (
+              <span className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-current" />
+            )}
+          </div>
+        )}
         {activeTools.length > 0 && (
           <div className="text-muted-foreground mt-1 text-xs">
             ⚙ {activeTools.map((t) => t.tool).join(", ")}
@@ -116,45 +122,4 @@ function MessageBubble({
       </div>
     </div>
   );
-}
-
-function MessageText({
-  text,
-  onOpenWikiPage,
-}: {
-  text: string;
-  onOpenWikiPage: (path: string) => void;
-}) {
-  const mentions = findWikiPageMentions(text);
-  if (mentions.length === 0) {
-    return text;
-  }
-
-  const parts: ReactNode[] = [];
-  let cursor = 0;
-
-  for (const mention of mentions) {
-    if (cursor < mention.start) {
-      parts.push(text.slice(cursor, mention.start));
-    }
-
-    parts.push(
-      <button
-        key={`${mention.start}-${mention.text}`}
-        type="button"
-        className="text-left align-baseline underline underline-offset-2"
-        onClick={() => onOpenWikiPage(mention.path)}
-      >
-        {mention.text}
-      </button>,
-    );
-
-    cursor = mention.end;
-  }
-
-  if (cursor < text.length) {
-    parts.push(text.slice(cursor));
-  }
-
-  return parts;
 }
