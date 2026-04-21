@@ -11,7 +11,7 @@ import { safePath } from "./path-utils.js";
 import { PiManager } from "./pi-manager.js";
 import { getSourcePreview, listSources, writeUploadedSource } from "./sources.js";
 import { getWikiPageData, listWikiPages } from "./wiki.js";
-import { createChat, deleteChat, getChat, listChats, saveChat, updateChatTitle, type StoredConversation } from "./chats.js";
+import { createChat, deleteChat, getChat, isValidChatId, listChats, saveChat, updateChatTitle, type StoredConversation } from "./chats.js";
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -80,6 +80,52 @@ function cleanupSession() {
   if (heartbeatTimer) {
     clearTimeout(heartbeatTimer);
     heartbeatTimer = null;
+  }
+}
+
+function accumulateIntoActiveConversation(message: ServerMessage): void {
+  if (!activeConversation) return;
+
+  switch (message.type) {
+    case "run_started":
+      activeConversation.messages.push({
+        id: message.runId,
+        role: "assistant",
+        text: "",
+        tools: [],
+        finished: false,
+      });
+      break;
+    case "assistant_delta": {
+      const last = activeConversation.messages.at(-1);
+      if (last && last.role === "assistant" && last.id === message.runId) {
+        last.text += message.text;
+      }
+      break;
+    }
+    case "tool_status": {
+      const last = activeConversation.messages.at(-1);
+      if (!last || last.role !== "assistant" || last.id !== message.runId) break;
+      if (message.status === "start") {
+        last.tools.push({ tool: message.tool, status: "start" });
+      } else {
+        for (let i = last.tools.length - 1; i >= 0; i--) {
+          const t = last.tools[i];
+          if (t.tool === message.tool && t.status === "start") {
+            t.status = "end";
+            break;
+          }
+        }
+      }
+      break;
+    }
+    case "run_finished": {
+      const last = activeConversation.messages.at(-1);
+      if (last && last.role === "assistant" && last.id === message.runId) {
+        last.finished = true;
+      }
+      break;
+    }
   }
 }
 
@@ -263,7 +309,7 @@ const server = Bun.serve({
 
       if (url.pathname.startsWith("/api/chats/")) {
         const chatId = url.pathname.slice("/api/chats/".length);
-        if (!chatId) {
+        if (!chatId || !isValidChatId(chatId)) {
           return new Response("Not found", { status: 404 });
         }
 
@@ -321,6 +367,7 @@ const server = Bun.serve({
       piManager = new PiManager(resolvedRepo, getAgentDir());
       piManager.onMessage((message: ServerMessage) => {
         ws.send(JSON.stringify(message));
+        accumulateIntoActiveConversation(message);
       });
       piManager.onRunFinished(() => {
         if (activeConversation) {
@@ -371,6 +418,9 @@ const server = Bun.serve({
           piManager?.handleAbort();
           break;
         case "set_conversation": {
+          if (!isValidChatId(parsed.conversationId)) {
+            break;
+          }
           const chat = getChat(chatsPath, parsed.conversationId);
           if (chat) {
             activeConversation = chat;

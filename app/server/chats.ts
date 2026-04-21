@@ -2,6 +2,12 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join } from "path";
 import { randomUUID } from "crypto";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isValidChatId(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
 export interface StoredMessage {
   id: string;
   role: "user" | "assistant";
@@ -42,6 +48,9 @@ export function createChat(chatsDir: string): { id: string } {
 }
 
 export function getChat(chatsDir: string, id: string): StoredConversation | null {
+  if (!isValidChatId(id)) {
+    return null;
+  }
   const filePath = join(chatsDir, `${id}.json`);
   if (!existsSync(filePath)) {
     return null;
@@ -57,15 +66,19 @@ export function listChats(chatsDir: string): ChatSummary[] {
   const summaries: ChatSummary[] = [];
 
   for (const file of files) {
-    const raw = readFileSync(join(chatsDir, file), "utf-8");
-    const chat = JSON.parse(raw) as StoredConversation;
-    summaries.push({
-      id: chat.id,
-      title: chat.title,
-      createdAt: chat.createdAt,
-      updatedAt: chat.updatedAt,
-      messageCount: chat.messages.length,
-    });
+    try {
+      const raw = readFileSync(join(chatsDir, file), "utf-8");
+      const chat = JSON.parse(raw) as StoredConversation;
+      summaries.push({
+        id: chat.id,
+        title: chat.title,
+        createdAt: chat.createdAt,
+        updatedAt: chat.updatedAt,
+        messageCount: chat.messages.length,
+      });
+    } catch {
+      continue;
+    }
   }
 
   summaries.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
@@ -84,6 +97,9 @@ export function updateChatTitle(chatsDir: string, id: string, title: string): bo
 }
 
 export function deleteChat(chatsDir: string, id: string): boolean {
+  if (!isValidChatId(id)) {
+    return false;
+  }
   const filePath = join(chatsDir, `${id}.json`);
   if (!existsSync(filePath)) {
     return false;
@@ -93,6 +109,11 @@ export function deleteChat(chatsDir: string, id: string): boolean {
 }
 
 export function saveChat(chatsDir: string, conversation: StoredConversation): void {
+  if (!isValidChatId(conversation.id)) {
+    throw new Error("Invalid conversation id");
+  }
+  mkdirSync(chatsDir, { recursive: true });
+  conversation.updatedAt = new Date().toISOString();
   writeFileSync(
     join(chatsDir, `${conversation.id}.json`),
     JSON.stringify(conversation, null, 2),
