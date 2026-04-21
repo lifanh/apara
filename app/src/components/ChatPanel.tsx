@@ -1,4 +1,5 @@
-import { useEffect, useRef, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { List, Plus, Trash2 } from "lucide-react";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,24 @@ export function ChatPanel({
   inputValue,
   onInputChange,
 }: ChatPanelProps) {
-  const { messages, isConnected, isStreaming, send, abort } = useChat();
+  const {
+    messages,
+    isConnected,
+    isStreaming,
+    send,
+    abort,
+    activeConversationId,
+    conversations,
+    loadConversation,
+    createConversation,
+    renameConversation,
+    deleteConversation,
+  } = useChat();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [showConversations, setShowConversations] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const activeConversation = conversations.find((c) => c.id === activeConversationId);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -33,12 +50,110 @@ export function ChatPanel({
 
   return (
     <div className="flex h-full flex-col border-l">
-      <div className="flex items-center justify-between border-b p-3">
-        <h2 className="text-sm font-semibold">Chat</h2>
-        <span
-          className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
-          title={isConnected ? "Connected" : "Disconnected"}
-        />
+      <div className="relative border-b px-3 py-2">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => setShowConversations(!showConversations)}
+            title="Conversations"
+          >
+            <List className="h-4 w-4" />
+          </Button>
+
+          {isEditingTitle ? (
+            <form
+              className="flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (activeConversationId && editTitle.trim()) {
+                  renameConversation(activeConversationId, editTitle.trim());
+                }
+                setIsEditingTitle(false);
+              }}
+            >
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                onBlur={() => {
+                  if (activeConversationId && editTitle.trim()) {
+                    renameConversation(activeConversationId, editTitle.trim());
+                  }
+                  setIsEditingTitle(false);
+                }}
+                className="h-7 text-sm"
+                autoFocus
+              />
+            </form>
+          ) : (
+            <button
+              type="button"
+              className="hover:bg-muted flex-1 truncate rounded px-1 py-0.5 text-left text-sm font-semibold"
+              onClick={() => {
+                setEditTitle(activeConversation?.title ?? "");
+                setIsEditingTitle(true);
+              }}
+              title="Click to rename"
+            >
+              {activeConversation?.title ?? "Chat"}
+            </button>
+          )}
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => createConversation()}
+            title="New conversation"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+
+          <span
+            className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
+            title={isConnected ? "Connected" : "Disconnected"}
+          />
+        </div>
+
+        {showConversations && (
+          <div className="bg-popover absolute left-0 right-0 top-full z-10 max-h-80 overflow-y-auto border-b shadow-md">
+            {conversations.length === 0 ? (
+              <p className="text-muted-foreground p-3 text-sm">No conversations yet.</p>
+            ) : (
+              conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  className={`hover:bg-muted group flex cursor-pointer items-center gap-2 px-3 py-2 ${
+                    conv.id === activeConversationId ? "bg-muted" : ""
+                  }`}
+                  onClick={() => {
+                    loadConversation(conv.id);
+                    setShowConversations(false);
+                  }}
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{conv.title}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {conv.messageCount} messages · {formatRelativeDate(conv.updatedAt)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-destructive hidden shrink-0 group-hover:block"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteConversation(conv.id);
+                    }}
+                    title="Delete conversation"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
       <ScrollArea className="flex-1 p-4">
         {messages.length === 0 && (
@@ -81,6 +196,18 @@ export function ChatPanel({
       </form>
     </div>
   );
+}
+
+function formatRelativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const minutes = Math.floor(diff / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
 }
 
 function MessageBubble({
