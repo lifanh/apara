@@ -31,8 +31,10 @@
 | 4 | Task 16: Chat ↔ Panel Wiring | ✅ Done | `7e0bcab` |
 | 4 | Task 17: Git Sync UI | ✅ Done | `95b8255` |
 | 4 | Task 18: AGENTS.md Schema File | ✅ Done | `bb44e2e` |
+| 5 | Task 19: Chat Markdown Rendering | ✅ Done | `da73a8d` |
+| 5 | Task 20: Persistent Named Conversations | ✅ Done | `569e7c1` |
 
-**Current state:** All phases complete. The full APARA web app is functional with all four views (Dashboard, Wiki Browser, Source Manager, Timeline), cross-panel wiring, Git Sync UI, and AGENTS.md schema template.
+**Current state:** All phases complete. Chat now renders markdown in assistant messages and supports persistent named conversations stored in `.apara/chats/`.
 
 ---
 

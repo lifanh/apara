@@ -116,7 +116,7 @@ With `APARA_AUTH_TOKEN` set, the server binds to `0.0.0.0` and requires token au
 
 ## Status
 
-Phase 1 (Pi Agent Extension) is complete. Phase 2 (Web App) is well underway — React frontend and Bun backend server are functional. See [the implementation plan](doc/specs/2026-04-12-apara-plan.md) for full progress.
+All planned phases complete. The APARA web app is functional with all four views (Dashboard, Wiki Browser, Source Manager, Timeline), chat with markdown rendering and persistent named conversations, cross-panel wiring, Git Sync UI, and AGENTS.md schema template. See [the implementation plan](doc/specs/2026-04-12-apara-plan.md) for full progress.
 
 ## Design Documents
 
