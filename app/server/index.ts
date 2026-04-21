@@ -330,6 +330,9 @@ const server = Bun.serve({
           if (!ok) {
             return new Response("Not found", { status: 404 });
           }
+          if (activeConversation?.id === chatId) {
+            activeConversation.title = body.title;
+          }
           return Response.json({ ok: true });
         }
 
@@ -337,6 +340,9 @@ const server = Bun.serve({
           const ok = deleteChat(chatsPath, chatId);
           if (!ok) {
             return new Response("Not found", { status: 404 });
+          }
+          if (activeConversation?.id === chatId) {
+            activeConversation = null;
           }
           return Response.json({ ok: true });
         }
