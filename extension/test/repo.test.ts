@@ -50,6 +50,7 @@ describe("repo", () => {
       expect(existsSync(join(tempDir, "wiki/synthesis"))).toBe(true);
       expect(existsSync(join(tempDir, "wiki/index.md"))).toBe(true);
       expect(existsSync(join(tempDir, "wiki/log.md"))).toBe(true);
+      expect(existsSync(join(tempDir, ".apara/chats"))).toBe(true);
     });
 
     it("creates AGENTS.md from template", () => {
