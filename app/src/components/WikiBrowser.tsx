@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import { MarkdownContent } from "@/components/MarkdownContent";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { rewriteWikiLinks } from "@/lib/wiki-links";
@@ -223,48 +222,9 @@ export function WikiBrowser({ selectedPath, onOpenPage }: WikiBrowserProps) {
                   <p className="text-muted-foreground text-sm">{page.path}</p>
                 </header>
 
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    a: ({ href, children }) =>
-                      href?.startsWith("wiki:") ? (
-                        <button
-                          type="button"
-                          className="text-primary underline underline-offset-2"
-                          onClick={() => openPage(href.slice(5))}
-                        >
-                          {children}
-                        </button>
-                      ) : (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary underline underline-offset-2"
-                        >
-                          {children}
-                        </a>
-                      ),
-                    h1: ({ children }) => (
-                      <h1 className="text-2xl font-semibold tracking-tight">{children}</h1>
-                    ),
-                    h2: ({ children }) => (
-                      <h2 className="text-xl font-semibold tracking-tight">{children}</h2>
-                    ),
-                    h3: ({ children }) => <h3 className="text-lg font-semibold">{children}</h3>,
-                    p: ({ children }) => <p className="leading-7">{children}</p>,
-                    ul: ({ children }) => <ul className="list-disc space-y-2 pl-5">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal space-y-2 pl-5">{children}</ol>,
-                    code: ({ children }) => (
-                      <code className="bg-muted rounded px-1.5 py-0.5 text-[0.9em]">{children}</code>
-                    ),
-                    pre: ({ children }) => (
-                      <pre className="bg-muted overflow-x-auto rounded-lg p-4 text-sm">{children}</pre>
-                    ),
-                  }}
-                >
+                <MarkdownContent onLinkClick={openPage}>
                   {renderedBody}
-                </ReactMarkdown>
+                </MarkdownContent>
               </article>
             )}
           </div>
