@@ -1,0 +1,13 @@
+services:
+  apara:
+    build: .
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ${APARA_REPO_PATH:-./.apara-repo}:/data/repo
+    environment:
+      - APARA_REPO_PATH=/data/repo
+      - APARA_AUTH_TOKEN=${APARA_AUTH_TOKEN:-}
+      - APARA_ALLOWED_ORIGIN=${APARA_ALLOWED_ORIGIN:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    restart: unless-stopped

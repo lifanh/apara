@@ -1,0 +1,12 @@
+node_modules/
+.git/
+dist/
+.superpowers/
+.factory/
+doc/
+*.md
+!app/package.json
+!extension/package.json
+!package.json
+.env*
+.oxlintrc.json

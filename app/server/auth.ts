@@ -1,3 +1,5 @@
+import { timingSafeEqual } from "crypto";
+
 const COOKIE_NAME = "apara_token";
 
 export function isAuthEnabled(): boolean {
@@ -16,11 +18,16 @@ export function checkAuth(cookieHeader: string | undefined): boolean {
     return false;
   }
 
-  return parseCookie(cookieHeader, COOKIE_NAME) === process.env.APARA_AUTH_TOKEN;
+  const token = parseCookie(cookieHeader, COOKIE_NAME);
+  const expected = process.env.APARA_AUTH_TOKEN!;
+  if (!token || token.length !== expected.length) {
+    return false;
+  }
+  return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
 }
 
 export function createAuthCookie(token: string, useSecure: boolean): string {
-  let cookie = `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Strict; Path=/`;
+  let cookie = `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800`;
   if (useSecure) {
     cookie += "; Secure";
   }
