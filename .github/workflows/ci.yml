@@ -21,7 +21,6 @@ jobs:
 
       - name: Run app tests
         run: cd app && bun vp test
-        continue-on-error: true
 
       - name: Lint extension
         run: cd extension && bun oxlint

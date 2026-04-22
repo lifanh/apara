@@ -9,10 +9,10 @@ interface LogEntry {
 
 function log(level: LogLevel, msg: string, fields?: Record<string, unknown>): void {
   const entry: LogEntry = {
+    ...fields,
     ts: new Date().toISOString(),
     level,
     msg,
-    ...fields,
   };
   console.log(JSON.stringify(entry));
 }

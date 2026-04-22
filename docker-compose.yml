@@ -9,5 +9,6 @@ services:
       - APARA_REPO_PATH=/data/repo
       - APARA_AUTH_TOKEN=${APARA_AUTH_TOKEN:-}
       - APARA_ALLOWED_ORIGIN=${APARA_ALLOWED_ORIGIN:-}
+      - APARA_TRUST_PROXY=${APARA_TRUST_PROXY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     restart: unless-stopped
