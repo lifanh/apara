@@ -29,6 +29,7 @@ COPY --from=build /app/extension/ ./extension/
 EXPOSE 3000
 
 ENV NODE_ENV=production
+ENV APARA_BIND_HOST=0.0.0.0
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD curl -f http://localhost:3000/health || exit 1

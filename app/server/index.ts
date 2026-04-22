@@ -48,7 +48,7 @@ if (!existsSync(configPath) && !(existsSync(wikiPath) && existsSync(rawPath))) {
 }
 
 const port = Number.parseInt(values.port ?? process.env.PORT ?? "3000", 10);
-const hostname = isAuthEnabled() ? "0.0.0.0" : "127.0.0.1";
+const hostname = process.env.APARA_BIND_HOST ?? (isAuthEnabled() ? "0.0.0.0" : "127.0.0.1");
 const distPath = join(import.meta.dir, "..", "dist");
 const hasDistFiles = existsSync(distPath);
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;

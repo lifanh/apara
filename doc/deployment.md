@@ -59,6 +59,7 @@ This references the included `docker-compose.yml`. Ensure `APARA_REPO_PATH`, you
 | `OPENAI_API_KEY` | Yes* | — | OpenAI API key (if using OpenAI models) |
 | `GOOGLE_API_KEY` | Yes* | — | Google API key (if using Gemini models) |
 | `PORT` | No | `3000` | Server listen port |
+| `APARA_BIND_HOST` | No | `127.0.0.1` (or `0.0.0.0` with auth) | Listen address. The Docker image sets this to `0.0.0.0`; override when running bare-metal and you need to listen on a specific interface. |
 | `APARA_TRUST_PROXY` | No | — | Set to `1` when running behind a trusted reverse proxy so the rate limiter reads the real client IP from the last entry of `X-Forwarded-For` instead of the direct peer. Only enable when a proxy is actually in front of the server. |
 
 *At least one LLM provider key is required.
