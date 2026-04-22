@@ -151,6 +151,7 @@ Place behind a reverse proxy (Caddy, nginx) for TLS. See [Deployment Guide](doc/
 | `ANTHROPIC_API_KEY` | Yes | LLM API key for Pi Agent |
 | `APARA_ALLOWED_ORIGIN` | No | CORS allowed origin |
 | `PORT` | No | Server port (default: 3000) |
+| `APARA_TRUST_PROXY` | No | Set to `1` when behind a trusted reverse proxy so the auth rate limiter uses the proxy-supplied client IP |
 
 ## Design Documents
 

@@ -18,7 +18,7 @@ const { values } = parseArgs({
   args: process.argv.slice(2),
   options: {
     repo: { type: "string" },
-    port: { type: "string", default: "3000" },
+    port: { type: "string" },
   },
 });
 
@@ -47,12 +47,28 @@ if (!existsSync(configPath) && !(existsSync(wikiPath) && existsSync(rawPath))) {
   process.exit(1);
 }
 
-const port = Number.parseInt(values.port ?? "3000", 10);
+const port = Number.parseInt(values.port ?? process.env.PORT ?? "3000", 10);
 const hostname = isAuthEnabled() ? "0.0.0.0" : "127.0.0.1";
 const distPath = join(import.meta.dir, "..", "dist");
 const hasDistFiles = existsSync(distPath);
 const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 const ALLOWED_ORIGIN = process.env.APARA_ALLOWED_ORIGIN;
+const TRUST_PROXY = process.env.APARA_TRUST_PROXY === "1" || process.env.APARA_TRUST_PROXY === "true";
+
+type RequestIPProvider = { requestIP?: (r: Request) => { address: string } | null };
+
+function getClientIp(req: Request, server: RequestIPProvider): string {
+  const directIp = server.requestIP?.(req)?.address;
+  if (TRUST_PROXY) {
+    const header = req.headers.get("x-forwarded-for");
+    if (header) {
+      const parts = header.split(",").map((v) => v.trim()).filter(Boolean);
+      const last = parts.at(-1);
+      if (last) return last;
+    }
+  }
+  return directIp ?? "unknown";
+}
 
 function withSecurityHeaders(response: Response): Response {
   response.headers.set("X-Content-Type-Options", "nosniff");
@@ -389,14 +405,12 @@ const server = Bun.serve({
     }
 
     if (url.pathname === "/api/auth" && req.method === "POST") {
-      const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim()
-        ?? (server as unknown as { requestIP?: (r: Request) => { address: string } | null }).requestIP?.(req)?.address
-        ?? "unknown";
+      const clientIp = getClientIp(req, server);
       if (!checkRateLimit(clientIp)) {
         return withCorsHeaders(new Response("Too Many Requests", { status: 429 }));
       }
       if (!isAuthEnabled()) {
-        return Response.json({ ok: true });
+        return withCorsHeaders(Response.json({ ok: true }));
       }
 
       const body = (await req.json()) as { token?: string };
@@ -416,7 +430,7 @@ const server = Bun.serve({
       }
 
       await new Promise((resolveDelay) => setTimeout(resolveDelay, 1000));
-      return new Response("Unauthorized", { status: 401 });
+      return withCorsHeaders(new Response("Unauthorized", { status: 401 }));
     }
 
     if (url.pathname.startsWith("/api/")) {
