@@ -86,6 +86,8 @@ function withCorsHeaders(response: Response): Response {
   response.headers.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
   response.headers.set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  response.headers.set("Access-Control-Allow-Credentials", "true");
+  response.headers.set("Vary", "Origin");
   return response;
 }
 
@@ -422,7 +424,7 @@ const server = Bun.serve({
             return withCorsHeaders(new Response(JSON.stringify({ ok: true }), {
               headers: {
                 "Content-Type": "application/json",
-                "Set-Cookie": createAuthCookie(body.token, url.protocol === "https:"),
+                "Set-Cookie": createAuthCookie(body.token, url.protocol === "https:", Boolean(ALLOWED_ORIGIN)),
               },
             }));
           }

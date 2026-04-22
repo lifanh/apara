@@ -26,9 +26,11 @@ export function checkAuth(cookieHeader: string | undefined): boolean {
   return timingSafeEqual(Buffer.from(token), Buffer.from(expected));
 }
 
-export function createAuthCookie(token: string, useSecure: boolean): string {
-  let cookie = `${COOKIE_NAME}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=604800`;
-  if (useSecure) {
+export function createAuthCookie(token: string, useSecure: boolean, crossOrigin = false): string {
+  const sameSite = crossOrigin ? "None" : "Strict";
+  const secure = useSecure || crossOrigin;
+  let cookie = `${COOKIE_NAME}=${token}; HttpOnly; SameSite=${sameSite}; Path=/; Max-Age=604800`;
+  if (secure) {
     cookie += "; Secure";
   }
   return cookie;
