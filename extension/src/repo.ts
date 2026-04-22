@@ -47,6 +47,7 @@ export function initRepo(repoRoot: string): void {
     join(wikiDir, "concepts"),
     join(wikiDir, "summaries"),
     join(wikiDir, "synthesis"),
+    join(repoRoot, ".apara", "chats"),
   ];
 
   for (const dir of dirs) {

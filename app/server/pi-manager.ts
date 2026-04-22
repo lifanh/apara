@@ -17,6 +17,7 @@ export class PiManager {
   private unsubscribe: (() => void) | null = null;
   private activeRunId: string | null = null;
   private messageHandler: ((message: ServerMessage) => void) | null = null;
+  private runFinishedHandler: ((runId: string) => void) | null = null;
 
   constructor(
     private repoPath: string,
@@ -75,6 +76,10 @@ export class PiManager {
     this.messageHandler = handler;
   }
 
+  onRunFinished(handler: (runId: string) => void): void {
+    this.runFinishedHandler = handler;
+  }
+
   cleanup(): void {
     this.unsubscribe?.();
     this.unsubscribe = null;
@@ -128,11 +133,15 @@ export class PiManager {
         break;
       }
       case "agent_end": {
+        const finishedRunId = this.activeRunId;
         this.emit({
           type: "run_finished",
           runId: this.activeRunId,
         });
         this.activeRunId = null;
+        if (finishedRunId) {
+          this.runFinishedHandler?.(finishedRunId);
+        }
         break;
       }
     }

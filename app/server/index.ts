@@ -11,6 +11,7 @@ import { safePath } from "./path-utils.js";
 import { PiManager } from "./pi-manager.js";
 import { getSourcePreview, listSources, writeUploadedSource } from "./sources.js";
 import { getWikiPageData, listWikiPages } from "./wiki.js";
+import { createChat, deleteChat, getChat, isValidChatId, listChats, saveChat, updateChatTitle, type StoredConversation } from "./chats.js";
 
 const { values } = parseArgs({
   args: process.argv.slice(2),
@@ -35,6 +36,7 @@ const resolvedRepo = resolve(repoPath);
 const configPath = join(resolvedRepo, ".apara.yaml");
 const wikiPath = join(resolvedRepo, "wiki");
 const rawPath = join(resolvedRepo, "raw");
+const chatsPath = join(resolvedRepo, ".apara", "chats");
 
 if (!existsSync(configPath) && !(existsSync(wikiPath) && existsSync(rawPath))) {
   console.error(
@@ -53,6 +55,7 @@ const MAX_UPLOAD_SIZE_BYTES = 10 * 1024 * 1024;
 let piManager: PiManager | null = null;
 let activeWs: ServerWebSocket<unknown> | null = null;
 let heartbeatTimer: ReturnType<typeof setTimeout> | null = null;
+let activeConversation: StoredConversation | null = null;
 
 function resetHeartbeat() {
   if (!activeWs) {
@@ -72,10 +75,57 @@ function resetHeartbeat() {
 function cleanupSession() {
   piManager?.cleanup();
   piManager = null;
+  activeConversation = null;
   activeWs = null;
   if (heartbeatTimer) {
     clearTimeout(heartbeatTimer);
     heartbeatTimer = null;
+  }
+}
+
+function accumulateIntoActiveConversation(message: ServerMessage): void {
+  if (!activeConversation) return;
+
+  switch (message.type) {
+    case "run_started":
+      activeConversation.messages.push({
+        id: message.runId,
+        role: "assistant",
+        text: "",
+        tools: [],
+        finished: false,
+      });
+      break;
+    case "assistant_delta": {
+      const last = activeConversation.messages.at(-1);
+      if (last && last.role === "assistant" && last.id === message.runId) {
+        last.text += message.text;
+      }
+      break;
+    }
+    case "tool_status": {
+      const last = activeConversation.messages.at(-1);
+      if (!last || last.role !== "assistant" || last.id !== message.runId) break;
+      if (message.status === "start") {
+        last.tools.push({ tool: message.tool, status: "start" });
+      } else {
+        for (let i = last.tools.length - 1; i >= 0; i--) {
+          const t = last.tools[i];
+          if (t.tool === message.tool && t.status === "start") {
+            t.status = "end";
+            break;
+          }
+        }
+      }
+      break;
+    }
+    case "run_finished": {
+      const last = activeConversation.messages.at(-1);
+      if (last && last.role === "assistant" && last.id === message.runId) {
+        last.finished = true;
+      }
+      break;
+    }
   }
 }
 
@@ -249,6 +299,55 @@ const server = Bun.serve({
         return Response.json(runGitPush(resolvedRepo));
       }
 
+      if (url.pathname === "/api/chats" && req.method === "GET") {
+        return Response.json(listChats(chatsPath));
+      }
+
+      if (url.pathname === "/api/chats" && req.method === "POST") {
+        return Response.json(createChat(chatsPath));
+      }
+
+      if (url.pathname.startsWith("/api/chats/")) {
+        const chatId = url.pathname.slice("/api/chats/".length);
+        if (!chatId || !isValidChatId(chatId)) {
+          return new Response("Not found", { status: 404 });
+        }
+
+        if (req.method === "GET") {
+          const chat = getChat(chatsPath, chatId);
+          if (!chat) {
+            return new Response("Not found", { status: 404 });
+          }
+          return Response.json(chat);
+        }
+
+        if (req.method === "PATCH") {
+          const body = (await req.json()) as { title?: string };
+          if (typeof body.title !== "string") {
+            return new Response("title is required", { status: 400 });
+          }
+          const ok = updateChatTitle(chatsPath, chatId, body.title);
+          if (!ok) {
+            return new Response("Not found", { status: 404 });
+          }
+          if (activeConversation?.id === chatId) {
+            activeConversation.title = body.title;
+          }
+          return Response.json({ ok: true });
+        }
+
+        if (req.method === "DELETE") {
+          const ok = deleteChat(chatsPath, chatId);
+          if (!ok) {
+            return new Response("Not found", { status: 404 });
+          }
+          if (activeConversation?.id === chatId) {
+            activeConversation = null;
+          }
+          return Response.json({ ok: true });
+        }
+      }
+
       return new Response("Not found", { status: 404 });
     }
 
@@ -274,6 +373,12 @@ const server = Bun.serve({
       piManager = new PiManager(resolvedRepo, getAgentDir());
       piManager.onMessage((message: ServerMessage) => {
         ws.send(JSON.stringify(message));
+        accumulateIntoActiveConversation(message);
+      });
+      piManager.onRunFinished(() => {
+        if (activeConversation) {
+          saveChat(chatsPath, activeConversation);
+        }
       });
       piManager.init().catch((err) => {
         ws.send(JSON.stringify({
@@ -300,15 +405,39 @@ const server = Bun.serve({
 
       switch (parsed.type) {
         case "prompt": {
+          if (activeConversation) {
+            activeConversation.messages.push({
+              id: crypto.randomUUID(),
+              role: "user",
+              text: parsed.text,
+              tools: [],
+              finished: true,
+            });
+          }
           const error = piManager?.handlePrompt(parsed.text);
           if (error) {
+            if (activeConversation) {
+              activeConversation.messages.pop();
+            }
             ws.send(JSON.stringify(error));
+          } else if (activeConversation) {
+            saveChat(chatsPath, activeConversation);
           }
           break;
         }
         case "abort":
           piManager?.handleAbort();
           break;
+        case "set_conversation": {
+          if (!isValidChatId(parsed.conversationId)) {
+            break;
+          }
+          const chat = getChat(chatsPath, parsed.conversationId);
+          if (chat) {
+            activeConversation = chat;
+          }
+          break;
+        }
         case "ping":
           ws.send(JSON.stringify({ type: "pong" satisfies ServerMessage["type"] }));
           break;

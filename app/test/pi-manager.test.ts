@@ -157,4 +157,18 @@ describe("PiManager", () => {
       expect(mockSession.dispose).toHaveBeenCalled();
     });
   });
+
+  describe("onRunFinished", () => {
+    it("calls the callback when agent_end fires", () => {
+      const callback = vi.fn();
+      manager.onRunFinished(callback);
+
+      manager.handlePrompt("hello");
+      const runId = messages[0].type === "run_started" ? (messages[0] as { runId: string }).runId : "";
+      mockSession.emit({ type: "agent_end", messages: [] });
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledWith(runId);
+    });
+  });
 });
