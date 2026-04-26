@@ -64,5 +64,12 @@ describe("auth", () => {
       const cookie = createAuthCookie("secret123", true);
       expect(cookie).toContain("Secure");
     });
+
+    it("uses SameSite=None and forces Secure when crossOrigin is true", () => {
+      const cookie = createAuthCookie("secret123", false, true);
+      expect(cookie).toContain("SameSite=None");
+      expect(cookie).not.toContain("SameSite=Strict");
+      expect(cookie).toContain("Secure");
+    });
   });
 });

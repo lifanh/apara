@@ -71,6 +71,16 @@ apara/                            # this repo (application code)
     └── specs/                    # design spec and implementation plan
 ```
 
+## Quick Start
+
+```bash
+bun install
+bun run build
+APARA_REPO_PATH=/path/to/knowledge-repo bun run start
+```
+
+Opens on `http://localhost:3000`.
+
 ## Development
 
 ```bash
@@ -78,16 +88,16 @@ apara/                            # this repo (application code)
 bun install
 
 # Run extension tests
-cd extension && bunx vitest run
+cd extension && bun vitest run
 
-# Run app dev server
-cd app && bunx vp dev
+# Run app dev server (frontend hot reload)
+cd app && bun vp dev
 
-# Run app backend server
+# Run app backend server (in a separate terminal)
 cd app && bun run server/index.ts --repo /path/to/knowledge-repo
 
-# Run app tests
-cd app && bunx vp test
+# Run all tests
+bun run test
 ```
 
 ## Deployment
@@ -95,31 +105,58 @@ cd app && bunx vp test
 ### Local
 
 ```bash
-cd app && bun run server/index.ts --repo /path/to/knowledge-repo
+bun run build
+APARA_REPO_PATH=/path/to/repo bun run start
 ```
 
-Opens on `http://localhost:3000`. No auth required — server binds to `127.0.0.1` only.
+No auth required — server binds to `127.0.0.1` only.
+
+### Docker
+
+```bash
+docker build -t apara .
+docker run -p 3000:3000 \
+  -v /path/to/repo:/data/repo \
+  -e APARA_REPO_PATH=/data/repo \
+  -e ANTHROPIC_API_KEY=sk-... \
+  apara
+```
+
+Or with Docker Compose:
+
+```bash
+cp .env.example .env  # edit with your values
+docker compose up
+```
 
 ### Cloud (VPS)
 
-Set environment variables and run the same server binary:
+Set `APARA_AUTH_TOKEN` to enable auth and bind to `0.0.0.0`:
 
 ```bash
-export APARA_REPO_PATH=/path/to/knowledge-repo
+export APARA_REPO_PATH=/path/to/repo
 export APARA_AUTH_TOKEN=your-secret-token
-cd app && bun run server/index.ts --port 3000
+export ANTHROPIC_API_KEY=sk-...
+bun run start
 ```
 
-With `APARA_AUTH_TOKEN` set, the server binds to `0.0.0.0` and requires token authentication. The knowledge repo should be a git repo on the server's persistent disk — use `git push`/`pull` (available in the UI) for backup and sync.
+Place behind a reverse proxy (Caddy, nginx) for TLS. See [Deployment Guide](doc/deployment.md) for full details including reverse proxy examples.
 
-**Requirements:** Bun runtime. No external processes needed — Pi Agent runs in-process via the SDK.
+## Environment Variables
 
-## Status
-
-All planned phases complete. The APARA web app is functional with all four views (Dashboard, Wiki Browser, Source Manager, Timeline), chat with markdown rendering and persistent named conversations, cross-panel wiring, Git Sync UI, and AGENTS.md schema template. See [the implementation plan](doc/specs/2026-04-12-apara-plan.md) for full progress.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `APARA_REPO_PATH` | Yes | Path to the knowledge repo |
+| `APARA_AUTH_TOKEN` | For remote | Enables token auth, binds to 0.0.0.0 |
+| `ANTHROPIC_API_KEY` | Yes | LLM API key for Pi Agent |
+| `APARA_ALLOWED_ORIGIN` | No | CORS allowed origin |
+| `PORT` | No | Server port (default: 3000) |
+| `APARA_TRUST_PROXY` | No | Set to `1` when behind a trusted reverse proxy so the auth rate limiter uses the proxy-supplied client IP |
 
 ## Design Documents
 
+- [Deployment Guide](doc/deployment.md) — production deployment instructions
 - [Design Spec](doc/specs/2026-04-12-apara-design.md) — architecture, data model, UI layout
 - [Implementation Plan](doc/specs/2026-04-12-apara-plan.md) — task breakdown with progress tracking
+- [Production Readiness](doc/specs/2026-04-22-production-deploy.md) — deployment milestone spec
 - [LLM Wiki Pattern](doc/llm-wiki.md) — the underlying knowledge management pattern
